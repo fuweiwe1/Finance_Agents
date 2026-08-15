@@ -1,0 +1,14 @@
+node_modules/
+dist/
+coverage/
+.env
+*.local
+.DS_Store
+*.tsbuildinfo
+
+# 本地日志与测试产物
+dev.log
+npm-install.log
+npm-install*.log
+test-results/
+playwright-report/
