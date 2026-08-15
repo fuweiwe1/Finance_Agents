@@ -1,5 +1,5 @@
 import { useQuote } from '../../hooks/usePolling';
-import { fmtPct, fmtPrice, fmtVolume, trendColor, SESSION_LABEL } from '../../lib/format';
+import { fmtPct, fmtPrice, fmtVolumeCn, trendColor, SESSION_LABEL, exchangeLabel } from '../../lib/format';
 import { Skeleton } from '../ui/Skeleton';
 
 export function MarketHeader({ symbol }: { symbol: string }) {
@@ -11,7 +11,7 @@ export function MarketHeader({ symbol }: { symbol: string }) {
         { label: 'High', value: fmtPrice(q.high) },
         { label: 'Low', value: fmtPrice(q.low) },
         { label: 'Prev Close', value: fmtPrice(q.prevClose) },
-        { label: 'Volume', value: fmtVolume(q.volume) },
+        { label: 'Volume', value: fmtVolumeCn(q.volume) },
       ]
     : null;
 
@@ -26,7 +26,10 @@ export function MarketHeader({ symbol }: { symbol: string }) {
               <Skeleton className="h-6 w-44" />
             )}
             {q ? (
-              <span className="shrink-0 text-sm text-slate-500">{q.symbol}.US</span>
+              <span className="shrink-0 rounded bg-slate-100 px-1.5 py-0.5 text-xs text-slate-500">
+                {q.symbol}
+                {exchangeLabel(q.code) ? ` · ${exchangeLabel(q.code)}` : ''}
+              </span>
             ) : (
               <Skeleton className="h-4 w-14" />
             )}
@@ -49,10 +52,10 @@ export function MarketHeader({ symbol }: { symbol: string }) {
           {q ? (
             <span
               className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ${
-                q.session === 'post'
-                  ? 'bg-amber-100 text-amber-700'
-                  : q.session === 'regular'
-                    ? 'bg-emerald-100 text-emerald-700'
+                q.session === 'regular'
+                  ? 'bg-emerald-100 text-emerald-700'
+                  : q.session === 'pre'
+                    ? 'bg-amber-100 text-amber-700'
                     : 'bg-slate-100 text-slate-600'
               }`}
             >

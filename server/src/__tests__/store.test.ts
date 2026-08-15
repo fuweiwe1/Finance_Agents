@@ -19,11 +19,11 @@ describe('FileStore（服务端持久化）', () => {
   it('默认自选 + 写盘后可重新读取', () => {
     const file = tempFile();
     const s = new FileStore(file);
-    expect(s.getWatchlist()).toEqual(['TSLA', 'AAPL', 'NVDA']);
+    expect(s.getWatchlist()).toEqual(['600519', '000001', '300750']);
 
-    s.setWatchlist(['MSFT', 'NVDA']);
+    s.setWatchlist(['002594', '300750']);
     const s2 = new FileStore(file);
-    expect(s2.getWatchlist()).toEqual(['MSFT', 'NVDA']);
+    expect(s2.getWatchlist()).toEqual(['002594', '300750']);
     expect(existsSync(file)).toBe(true);
   });
 
@@ -64,6 +64,6 @@ describe('FileStore（服务端持久化）', () => {
     const file = tempFile();
     writeFileSync(file, '{broken json', 'utf8');
     const s = new FileStore(file);
-    expect(s.getWatchlist()).toEqual(['TSLA', 'AAPL', 'NVDA']);
+    expect(s.getWatchlist()).toEqual(['600519', '000001', '300750']);
   });
 });

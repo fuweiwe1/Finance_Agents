@@ -8,6 +8,7 @@ coverage/
 
 # 本地日志与测试产物
 dev.log
+srv*.log
 npm-install.log
 npm-install*.log
 test-results/

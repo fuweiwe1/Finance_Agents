@@ -23,6 +23,11 @@ export interface MarketQuote {
   afterHoursPrice?: number;
   afterHoursChangePct?: number;
   session: MarketSession;
+  // A 股行情字段直接携带的财务指标（腾讯）
+  pe?: number;
+  pb?: number;
+  turnoverRate?: number;
+  eps?: number;
 }
 
 export interface Financials {
@@ -30,11 +35,11 @@ export interface Financials {
   pe?: number | null;
   pb?: number | null;
   turnoverRate?: number | null; // 换手率 %
-  marketCap?: number | null; // USD
+  marketCap?: number | null; // 元
   eps?: number | null;
   dividendYield?: number | null; // %
   sharesOutstanding?: number | null;
-  source: 'finnhub' | 'tencent' | 'unavailable';
+  source: 'tencent' | 'unavailable';
 }
 
 export interface NewsItem {

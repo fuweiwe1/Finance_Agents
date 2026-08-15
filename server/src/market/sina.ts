@@ -4,13 +4,12 @@ import { getMarketSession } from './marketSession.js';
 import type { MarketDataProvider } from './provider.js';
 
 /**
- * 新浪美股行情（hq.sinajs.cn）——腾讯解析失败时的兜底源，免 key。
- * 字段为逗号分隔，索引映射经真实响应验证：
- *   0 中文名  1 现价  2 涨跌幅%  3 时间(北京)  4 涨跌额  5 今开  6 最高  7 最低
- *   8 52周高  9 52周低  10 成交量  12 总市值(USD)  19 总股本(股)
- *   21 盘后价  22 盘后涨跌额  23 盘后涨跌幅%  26 昨收
+ * 新浪 A 股行情（hq.sinajs.cn）——腾讯失败时的兜底源，免 key。
+ * 字段为逗号分隔，索引映射经 sh600519 真实响应验证：
+ *   0 名称  1 今开  2 昨收  3 现价  4 最高  5 最低
+ *   8 成交量(股)  9 成交额(元)  30 日期  31 时间
  */
-export function parseSinaQuote(raw: string, symbol: string): MarketQuote | null {
+export function parseSinaAshareQuote(raw: string, symbol: string): MarketQuote | null {
   const m = raw.match(/="(.*)"\s*;?\s*$/);
   if (!m) throw new MarketDataError('unexpected response shape', 'sina', 'parse');
   const body = m[1];
@@ -23,35 +22,27 @@ export function parseSinaQuote(raw: string, symbol: string): MarketQuote | null 
     return Number.isFinite(n) ? n : undefined;
   };
 
-  const price = num(1);
+  const price = num(3);
   if (price === undefined || price <= 0) return null;
 
-  const prevClose = num(26) ?? price;
-  const change = num(4) ?? price - prevClose;
-  const changePct = num(2) ?? (prevClose > 0 ? (price / prevClose - 1) * 100 : 0);
-  const afterHours = num(21);
-  const afterHoursChangePct = num(23);
+  const prevClose = num(2) ?? price;
+  const change = price - prevClose;
+  const changePct = prevClose > 0 ? (price / prevClose - 1) * 100 : 0;
 
   return {
     symbol,
-    code: `${symbol}.US`,
+    code: `${symbol}`,
     name: fields[0] || symbol,
     price,
     change,
     changePct,
-    open: num(5) ?? price,
-    high: num(6) ?? price,
-    low: num(7) ?? price,
+    open: num(1) ?? price,
+    high: num(4) ?? price,
+    low: num(5) ?? price,
     prevClose,
-    volume: num(10) ?? 0,
-    currency: 'USD',
-    quoteTime: fields[3] || '',
-    marketCap: num(12),
-    week52High: num(8),
-    week52Low: num(9),
-    sharesOutstanding: num(19),
-    afterHoursPrice: afterHours,
-    afterHoursChangePct,
+    volume: num(8) ?? 0, // 股
+    currency: 'CNY',
+    quoteTime: fields[30] && fields[31] ? `${fields[30]} ${fields[31]}` : '',
     session: getMarketSession(),
   };
 }
@@ -70,6 +61,6 @@ export class SinaProvider implements MarketDataProvider {
     });
     if (!res.ok) throw new MarketDataError(`HTTP ${res.status}`, 'sina', 'network');
     const text = this.decoder.decode(await res.arrayBuffer());
-    return parseSinaQuote(text, norm.symbol);
+    return parseSinaAshareQuote(text, norm.symbol);
   }
 }

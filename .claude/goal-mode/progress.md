@@ -14,7 +14,17 @@ updated: 2026-08-15
 | M4 集成与打磨 | ✅ done | FileStore 持久化(watchlist/sessions/modelConfig→JSON，.data/ 不入库)实机验证"加 MSFT→重启→仍在"；骨架屏/免责声明落地；store 单测 5 过；typecheck/lint 绿；E2E 2/2 |
 | M5 优化与文档 | ✅ done | README(启动/配置/测试/部署/免责)；长会话按 token 剪枝(transformContext+estimateTokens)；chat_end 透传 token/cost 用量，前端展示；缓存/轮询验证；全量回归绿 |
 
-## M0–M5 全部完成 ✅
+## M6 A 股化改造（用户决策：只支持 A 股，数据源全国内）✅
+
+| 里程碑 | 状态 | 验收证据 |
+|---|---|---|
+| M6-1 A股 normalize+时段 | ✅ | 600519→sh600519/000001→sz/bj 前缀规则；北京时间时段(集合竞价/交易/收盘) |
+| M6-2 A股解析器+K线 | ✅ | 腾讯88字段(PE/PB/换手/市值/股本/一年高低)+qfqday日K；新浪A股格式；真实fixture锁格式 |
+| M6-3 去 Finnhub | ✅ | composite 移除 Finnhub；getFinancials 由腾讯报价构建；新闻降级；.env.example 更新 |
+| M6-4 前端适配 | ✅ | 默认自选A股、量(万手)/市值(亿)/时段徽标(交易中·已收盘)、去 Finnhub 提示 |
+| M6-5 测试+验证+文档 | ✅ | demo 真实A股全字段正确；typecheck/lint 绿；server 47+web 2 测试 + E2E 2/2 全过；README 更新 |
+
+## M0–M6 全部完成 ✅
 
 ## 关键备注
 

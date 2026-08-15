@@ -8,7 +8,6 @@ import { SessionStore } from './agent/sessions.js';
 import { marketRoutes } from './api/market.routes.js';
 import { watchlistRoutes } from './api/watchlist.routes.js';
 import { agentRoutes } from './api/agent.routes.js';
-import { config } from './config.js';
 
 export interface AppServices {
   market?: CompositeProvider;
@@ -20,7 +19,7 @@ export interface AppServices {
 export function createApp(services: AppServices = {}): express.Express {
   // 默认内存 store（测试隔离）；生产在 index.ts 注入 FileStore(文件路径)
   const store = services.store ?? new FileStore(null);
-  const market = services.market ?? new CompositeProvider({ finnhubApiKey: config.finnhubApiKey });
+  const market = services.market ?? new CompositeProvider();
   const models = services.models ?? new ModelManager({ store });
   const sessions = services.sessions ?? new SessionStore(store);
 

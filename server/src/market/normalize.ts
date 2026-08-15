@@ -1,41 +1,51 @@
 /**
- * 股票代码归一化：把各种用户输入（tsla / TSLA / TSLA.US / TSLA.OQ / TSLA.NASDAQ / usTSLA）
- * 统一成内部 symbol + 各 Provider 需要的代码形式。
+ * A 股代码归一化：把用户输入（600519 / sh600519 / 贵州茅台的数字代码）统一成
+ * symbol + 各 Provider 需要的代码形式。仅支持沪深北 A 股。
  */
 
+export type Exchange = 'sh' | 'sz' | 'bj';
+
 export interface NormalizedSymbol {
-  symbol: string; // "TSLA"
-  code: string; // "TSLA.US"
-  tencent: string; // "usTSLA"
-  sina: string; // "gb_tsla"
+  symbol: string; // '600519'
+  code: string; // 'sh600519'（交易所限定，腾讯/新浪同用）
+  tencent: string; // 'sh600519'
+  sina: string; // 'sh600519'
+  exchange: Exchange;
 }
 
-const EXCHANGE_SUFFIX = /\.(US|NASDAQ|NYSE|OQ|N|A|B)$/i;
-const TICKER = /^[A-Z][A-Z0-9.-]{0,9}$/i;
+const EXCHANGE_PREFIX = /^(sh|sz|bj)/;
+const CODE = /^[0-9]{6}$/;
+
+function exchangeOf(code: string): Exchange | null {
+  if (/^(60|68|900)/.test(code)) return 'sh'; // 沪主板/科创板/B股
+  if (/^(00|30|20)/.test(code)) return 'sz'; // 深主板/创业板/B股
+  if (/^(43|83|87|88|92)/.test(code)) return 'bj'; // 北交所
+  return null;
+}
+
+export const EXCHANGE_LABEL: Record<Exchange, string> = { sh: '沪', sz: '深', bj: '北' };
 
 export function normalizeSymbol(input: string): NormalizedSymbol | null {
-  let s = input.trim();
+  let s = input.trim().toLowerCase();
   if (!s) return null;
 
-  // 腾讯格式的 "usTSLA"/"usaapl"（小写 us 前缀）→ 剥成 "TSLA"。
-  // 大小写敏感：真实美股 ticker 如 "USEG"（U.S. Energy）是大写 US 开头，不能剥。
-  if (s.startsWith('us') && s.slice(2).match(TICKER)) {
-    s = s.slice(2);
+  let exchange: Exchange | null = null;
+  if (EXCHANGE_PREFIX.test(s)) {
+    const prefix = s.slice(0, 2);
+    if (prefix === 'sh' || prefix === 'sz' || prefix === 'bj') {
+      exchange = prefix;
+      s = s.slice(2);
+    }
   }
-  s = s.replace(EXCHANGE_SUFFIX, '');
-  const symbol = s.toUpperCase();
-  if (!TICKER.test(symbol)) return null;
-  if (!/^[A-Z]{1,5}$/.test(symbol)) return null; // 美股 ticker 1-5 位字母
 
-  return {
-    symbol,
-    code: `${symbol}.US`,
-    tencent: `us${symbol}`,
-    sina: `gb_${symbol.toLowerCase()}`,
-  };
+  if (!CODE.test(s)) return null;
+  exchange = exchange ?? exchangeOf(s);
+  if (!exchange) return null;
+
+  const code = `${exchange}${s}`;
+  return { symbol: s, code, tencent: code, sina: code, exchange };
 }
 
-/** 判断是否合法的美股代码（用于前端搜索/添加前的快速校验） */
 export function isValidSymbol(input: string): boolean {
   return normalizeSymbol(input) !== null;
 }

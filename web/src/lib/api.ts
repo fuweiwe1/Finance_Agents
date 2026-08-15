@@ -87,7 +87,7 @@ export interface Financials {
   eps?: number | null;
   dividendYield?: number | null;
   sharesOutstanding?: number | null;
-  source: 'finnhub' | 'tencent' | 'unavailable';
+  source: 'tencent' | 'unavailable';
 }
 
 export interface NewsItem {

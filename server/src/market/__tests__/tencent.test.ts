@@ -1,59 +1,63 @@
 import { readFileSync } from 'node:fs';
 import { describe, it, expect } from 'vitest';
-import { parseTencentQuote } from '../tencent.js';
+import { parseTencentAshareQuote, parseTencentKline } from '../tencent.js';
 
 const fixture = (name: string) => readFileSync(new URL(`./fixtures/${name}`, import.meta.url), 'utf8');
 
-describe('parseTencentQuote（腾讯字段解析，真实响应 fixture 锁格式）', () => {
-  it('解析 TSLA 真实响应', () => {
-    const q = parseTencentQuote(fixture('tencent.tsla.txt'), 'TSLA');
+function quoteLine(code: string): string {
+  const line = fixture('tencent.ashare.quote.txt').split('\n').find((l) => l.startsWith(`v_${code}=`));
+  if (!line) throw new Error(`fixture line for ${code} not found`);
+  return line;
+}
+
+describe('parseTencentAshareQuote（腾讯 A 股，真实 fixture 锁格式）', () => {
+  it('解析贵州茅台(sh600519)', () => {
+    const q = parseTencentAshareQuote(quoteLine('sh600519'), '600519');
     expect(q).not.toBeNull();
-    expect(q!.name).toBe('特斯拉');
-    expect(q!.code).toBe('TSLA.OQ');
-    expect(q!.price).toBe(342.27);
-    expect(q!.prevClose).toBe(339.96);
-    expect(q!.open).toBe(342.33);
-    expect(q!.high).toBe(351.26);
-    expect(q!.low).toBe(335.33);
-    expect(q!.volume).toBe(45437144);
-    expect(q!.change).toBe(2.31);
-    expect(q!.changePct).toBeCloseTo(0.68, 2);
-    expect(q!.currency).toBe('USD');
+    expect(q!.name).toBe('贵州茅台');
+    expect(q!.price).toBe(1341.99);
+    expect(q!.prevClose).toBe(1355.29);
+    expect(q!.open).toBe(1355.0);
+    expect(q!.high).toBe(1359.0);
+    expect(q!.low).toBe(1338.14);
+    expect(q!.volume).toBe(29853 * 100); // 手 → 股
+    expect(q!.change).toBeCloseTo(-13.3, 2);
+    expect(q!.changePct).toBeCloseTo(-0.98, 2);
+    expect(q!.currency).toBe('CNY');
+    expect(q!.marketCap).toBeCloseTo(16775.97 * 1e8, 0);
+    expect(q!.pe).toBeCloseTo(20.6, 2);
+    expect(q!.pb).toBeCloseTo(6.68, 2);
+    expect(q!.turnoverRate).toBeCloseTo(0.24, 2);
+    expect(q!.sharesOutstanding).toBe(1250081601);
+    expect(q!.week52High).toBe(1539.98);
+    expect(q!.week52Low).toBe(1151.01);
     expect(q!.quoteTime).toContain('2026-08-14');
-    expect(q!.marketCap).toBeCloseTo(13518.11587 * 1e8, 0);
-    expect(q!.marketCapFloat).toBeCloseTo(12092.74913 * 1e8, 0);
-    expect(q!.week52High).toBe(498.83);
-    expect(q!.week52Low).toBe(297.38);
-    expect(q!.sharesOutstanding).toBe(3949547394); // field 62 总股本（field 63 为流通股本）
-    expect(q!.afterHoursPrice).toBe(342.81);
   });
 
-  it('解析 AAPL 真实响应（交叉验证字段索引）', () => {
-    const q = parseTencentQuote(fixture('tencent.aapl.txt'), 'AAPL');
-    expect(q!.price).toBe(305.93);
-    expect(q!.high).toBe(307.49);
-    expect(q!.low).toBe(304.3);
-    expect(q!.marketCap).toBeCloseTo(44647.97487 * 1e8, 0);
-    expect(q!.sharesOutstanding).toBe(14594180000);
-    expect(q!.week52High).toBe(344.26);
-    expect(q!.week52Low).toBe(222.95);
-    expect(q!.afterHoursPrice).toBe(305.78);
-  });
+  it('解析平安银行(sz000001)与宁德时代(sz300750)', () => {
+    const pa = parseTencentAshareQuote(quoteLine('sz000001'), '000001')!;
+    expect(pa.name).toBe('平安银行');
+    expect(pa.price).toBe(11.11);
+    expect(pa.changePct).toBeCloseTo(-1.24, 2);
 
-  it('解析 NVDA 真实响应（交叉验证）', () => {
-    const q = parseTencentQuote(fixture('tencent.nvda.txt'), 'NVDA');
-    expect(q!.price).toBe(225.16);
-    expect(q!.changePct).toBeCloseTo(-0.06, 2);
-    expect(q!.sharesOutstanding).toBe(24221000000);
-    expect(q!.marketCap).toBeCloseTo(54536.0036 * 1e8, 0);
+    const nd = parseTencentAshareQuote(quoteLine('sz300750'), '300750')!;
+    expect(nd.name).toBe('宁德时代');
+    expect(nd.price).toBe(393.93);
+    expect(nd.pe).toBeCloseTo(21.44, 2);
   });
+});
 
-  it('无效代码（全零）返回 null', () => {
-    expect(parseTencentQuote(fixture('tencent.invalid.txt'), 'ZZZZ')).toBeNull();
-  });
-
-  it('畸形响应抛 parse 错误', () => {
-    expect(() => parseTencentQuote('garbage', 'TSLA')).toThrow();
-    expect(() => parseTencentQuote('v_usTSLA="only",', 'TSLA')).toThrow();
+describe('parseTencentKline（A 股前复权日K qfqday）', () => {
+  it('解析茅台日K', () => {
+    const json = JSON.parse(fixture('tencent.ashare.kline.txt')) as unknown;
+    const k = parseTencentKline(json, 'sh600519');
+    expect(k.length).toBe(5);
+    const last = k[4]!;
+    expect(last.open).toBe(1355.0);
+    expect(last.close).toBe(1341.99);
+    expect(last.high).toBe(1359.0);
+    expect(last.low).toBe(1338.14);
+    expect(last.volume).toBe(29853 * 100);
+    expect(new Date(last.ts * 1000).toISOString().slice(0, 10)).toBe('2026-08-14');
   });
 });

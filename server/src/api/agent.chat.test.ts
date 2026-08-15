@@ -6,16 +6,18 @@ import { createApp } from '../app.js';
 import { ModelManager, type ModelProvider } from '../agent/models.js';
 import { SessionStore } from '../agent/sessions.js';
 import { CompositeProvider } from '../market/composite.js';
-import { parseTencentQuote } from '../market/tencent.js';
+import { parseTencentAshareQuote } from '../market/tencent.js';
 import type { TencentProvider } from '../market/tencent.js';
 import type { SinaProvider } from '../market/sina.js';
 
 const fixture = (name: string) => readFileSync(new URL(`../market/__tests__/fixtures/${name}`, import.meta.url), 'utf8');
+const quoteLine = (code: string) =>
+  fixture('tencent.ashare.quote.txt').split('\n').find((l) => l.startsWith(`v_${code}=`))!;
 
 function stubMarket(): CompositeProvider {
   const tencent = {
     name: 'tencent',
-    getQuote: async () => parseTencentQuote(fixture('tencent.tsla.txt'), 'TSLA')!,
+    getQuote: async () => parseTencentAshareQuote(quoteLine('sh600519'), '600519')!,
     getKline: async () => [],
   } as unknown as TencentProvider;
   const sina = { name: 'sina', getQuote: async () => null } as unknown as SinaProvider;
@@ -45,8 +47,8 @@ describe('Agent 对话 SSE（fauxProvider 脚本化模型，无 key 可测）', 
     models.setProvider(faux.provider);
     // 脚本化：第 1 次模型调用返回工具调用，第 2 次返回最终回答
     faux.setResponses([
-      fauxAssistantMessage([fauxToolCall('get_quote', { symbol: 'TSLA' })]),
-      fauxAssistantMessage('TSLA 最新价为 342.27 美元，上涨 0.68%。'),
+      fauxAssistantMessage([fauxToolCall('get_quote', { symbol: '600519' })]),
+      fauxAssistantMessage('贵州茅台最新价为 1341.99 元，下跌 0.98%。'),
     ]);
 
     const modelManager = new ModelManager({
@@ -66,7 +68,7 @@ describe('Agent 对话 SSE（fauxProvider 脚本化模型，无 key 可测）', 
 
     const res = await request(app)
       .post(`/api/agent/sessions/${id}/chat`)
-      .send({ message: 'TSLA 现在多少钱？', context: { symbol: 'TSLA', name: '特斯拉' } });
+      .send({ message: '贵州茅台现在多少钱？', context: { symbol: '600519', name: '贵州茅台' } });
 
     expect(res.status).toBe(200);
     const events = parseSse(res.text);

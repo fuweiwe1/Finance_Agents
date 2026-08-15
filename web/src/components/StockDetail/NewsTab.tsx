@@ -15,9 +15,7 @@ export function NewsTab({ symbol }: { symbol: string }) {
   if (!news.length) {
     return (
       <div className="rounded-xl bg-white p-4 shadow-sm ring-1 ring-slate-100">
-        <p className="py-6 text-center text-sm text-slate-400">
-          暂无新闻。配置 Finnhub API key 后可拉取公司新闻。
-        </p>
+        <p className="py-6 text-center text-sm text-slate-400">A 股新闻接口暂未接入，敬请期待。</p>
       </div>
     );
   }

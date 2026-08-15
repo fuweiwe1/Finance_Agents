@@ -98,7 +98,7 @@ function WatchlistRow({
       }`}
     >
       <div className="min-w-0">
-        <div className="text-sm font-medium text-slate-800">{symbol}.US</div>
+        <div className="text-sm font-medium text-slate-800">{symbol}</div>
         <div className="truncate text-xs text-slate-400">{quote?.name ?? '—'}</div>
       </div>
       <div className="ml-2 flex items-center gap-1.5 text-right">

@@ -3,30 +3,25 @@ import { normalizeSymbol } from './normalize.js';
 import type { MarketDataProvider } from './provider.js';
 import { TencentProvider } from './tencent.js';
 import { SinaProvider } from './sina.js';
-import { FinnhubProvider } from './finnhub.js';
 import { TTLCache } from './cache.js';
 
 export interface CompositeOptions {
-  finnhubApiKey?: string;
   quoteTtlMs?: number; // 默认 10s
-  financialsTtlMs?: number; // 默认 1h
-  newsTtlMs?: number; // 默认 10min
   klineTtlMs?: number; // 默认 1h
 }
 
 /**
- * 组合 Provider：
- * - 行情(报价/批量/盘后) → 腾讯，失败兜底新浪；
- * - 估值/基本面/新闻/图表 → Finnhub（无 key 或失败时降级，不抛错）。
+ * 组合 Provider（仅 A 股，全部国内免费源）：
+ * - 行情(报价/批量) → 腾讯，失败兜底新浪；
+ * - 基本面 → 腾讯报价字段（PE/PB/换手/市值/股本/EPS 推导）；
+ * - 新闻 → 暂未接入，返回空（UI 引导）；
+ * - 日K → 腾讯 fqkline（qfqday）。
  */
 export class CompositeProvider implements MarketDataProvider {
   readonly name = 'composite';
   private readonly tencent: TencentProvider;
   private readonly sina: SinaProvider;
-  private readonly finnhub: FinnhubProvider | null;
   private readonly quoteCache: TTLCache<MarketQuote | null>;
-  private readonly finCache: TTLCache<Financials | null>;
-  private readonly newsCache: TTLCache<NewsItem[]>;
   private readonly klineCache: TTLCache<KlineBar[]>;
 
   /** deps 仅供测试注入桩 Provider */
@@ -36,15 +31,8 @@ export class CompositeProvider implements MarketDataProvider {
   ) {
     this.tencent = deps.tencent ?? new TencentProvider();
     this.sina = deps.sina ?? new SinaProvider();
-    this.finnhub = opts.finnhubApiKey ? new FinnhubProvider(opts.finnhubApiKey) : null;
     this.quoteCache = new TTLCache(opts.quoteTtlMs ?? 10_000);
-    this.finCache = new TTLCache(opts.financialsTtlMs ?? 3_600_000);
-    this.newsCache = new TTLCache(opts.newsTtlMs ?? 600_000);
     this.klineCache = new TTLCache(opts.klineTtlMs ?? 3_600_000);
-  }
-
-  get hasFinnhub(): boolean {
-    return this.finnhub !== null;
   }
 
   async getQuote(symbol: string): Promise<MarketQuote | null> {
@@ -73,67 +61,39 @@ export class CompositeProvider implements MarketDataProvider {
   async getFinancials(symbol: string): Promise<Financials | null> {
     const norm = normalizeSymbol(symbol);
     if (!norm) return null;
-    const key = norm.symbol.toLowerCase();
-    return this.finCache.get(key, async () => {
-      const quote = await this.getQuote(key).catch(() => null);
-      const base: Financials = {
-        symbol: norm.symbol,
-        pe: null,
-        pb: null,
-        turnoverRate: null,
-        eps: null,
-        dividendYield: null,
-        marketCap: quote?.marketCap ?? null,
-        sharesOutstanding: quote?.sharesOutstanding ?? null,
-        source: 'tencent',
-      };
-      if (!this.finnhub) return base; // 无 key → 只有腾讯提供的市值/股本
-      try {
-        const f = await this.finnhub.getFinancials(norm.symbol);
-        if (!f) return base;
-        const shares = f.sharesOutstanding ?? base.sharesOutstanding;
-        const volume = quote?.volume;
-        const turnoverRate = volume && shares ? (volume / shares) * 100 : f.turnoverRate;
-        return {
-          ...f,
-          symbol: norm.symbol,
-          marketCap: f.marketCap ?? base.marketCap,
-          sharesOutstanding: shares,
-          turnoverRate,
-        };
-      } catch (err) {
-        console.warn(`[composite] finnhub financials failed for ${symbol}: ${(err as Error).message}`);
-        return base;
-      }
-    });
+    const q = await this.getQuote(norm.symbol).catch(() => null);
+    if (!q) return null;
+    return {
+      symbol: norm.symbol,
+      pe: q.pe ?? null,
+      pb: q.pb ?? null,
+      turnoverRate: q.turnoverRate ?? null,
+      marketCap: q.marketCap ?? null,
+      eps: q.eps ?? null,
+      dividendYield: null, // 腾讯行情未提供股息率
+      sharesOutstanding: q.sharesOutstanding ?? null,
+      source: 'tencent',
+    };
   }
 
-  async getNews(symbol: string, limit = 10): Promise<NewsItem[]> {
-    const norm = normalizeSymbol(symbol);
-    const fh = this.finnhub;
-    if (!norm || !fh) return [];
-    const key = `${norm.symbol.toLowerCase()}:${limit}`;
-    return this.newsCache.get(key, () => fh.getNews(norm.symbol, limit));
+  async getNews(_symbol: string, _limit = 10): Promise<NewsItem[]> {
+    // A 股免费新闻接口暂未接入，返回空（前端显示引导文案）
+    return [];
   }
 
   async getKline(symbol: string, interval = 'day', count = 120): Promise<KlineBar[]> {
     const norm = normalizeSymbol(symbol);
     if (!norm) return [];
     const key = `${norm.symbol.toLowerCase()}:${interval}:${count}`;
-    const fh = this.finnhub;
-    if (interval === 'day' || interval === '1d') {
-      // 日K优先走腾讯（免费国内可达），失败降级 Finnhub
-      return this.klineCache.get(key, async () => {
-        try {
-          return await this.tencent.getKline(norm.symbol, 'day', count);
-        } catch (err) {
-          if (err instanceof MarketDataError && err.code === 'invalid_symbol') throw err;
-          if (!fh) throw err;
-          return fh.getKline(norm.symbol, 'D', count);
-        }
-      });
-    }
-    if (!fh) return [];
-    return this.klineCache.get(key, () => fh.getKline(norm.symbol, interval, count));
+    return this.klineCache.get(key, async () => {
+      try {
+        return await this.tencent.getKline(norm.symbol, interval, count);
+      } catch (err) {
+        if (err instanceof MarketDataError && err.code === 'invalid_symbol') throw err;
+        // 腾讯 K 线失败 → 返回空而非抛错（图表显示空态引导）
+        console.warn(`[composite] kline failed for ${symbol}: ${(err as Error).message}`);
+        return [];
+      }
+    });
   }
 }

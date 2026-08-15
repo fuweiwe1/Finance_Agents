@@ -5,16 +5,17 @@ export default defineConfig({
   timeout: 45_000,
   fullyParallel: false,
   retries: 0,
+  globalSetup: './playwright.global-setup.ts',
   use: {
     baseURL: 'http://localhost:5173',
     headless: true,
     viewport: { width: 1440, height: 900 },
   },
   webServer: {
-    // E2E 用隔离数据文件，避免受用户真实 .data 状态（自选/会话/模型配置）影响
+    // E2E 用隔离数据文件 + 始终自起全新服务，避免受残留进程/用户真实 .data 影响
     command: 'set "DATA_FILE=.data/e2e-state.json" && npm run dev',
     url: 'http://localhost:5173',
-    reuseExistingServer: true,
+    reuseExistingServer: false,
     timeout: 120_000,
   },
 });

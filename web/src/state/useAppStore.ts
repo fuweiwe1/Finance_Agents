@@ -19,7 +19,7 @@ interface AppState {
 
 export const useAppStore = create<AppState>((set, get) => ({
   watchlist: [],
-  selected: 'TSLA',
+  selected: '600519',
   sessions: [],
   activeSessionId: null,
   modelConfig: null,
@@ -41,7 +41,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     }
     const current = get().selected;
     const selected =
-      current && watchlist.includes(current) ? current : (watchlist[0] ?? 'TSLA');
+      current && watchlist.includes(current) ? current : (watchlist[0] ?? '600519');
     set({
       watchlist,
       sessions: nextSessions,

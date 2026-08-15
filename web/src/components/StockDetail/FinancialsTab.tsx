@@ -1,5 +1,5 @@
 import { useFinancials } from '../../hooks/usePolling';
-import { fmtCap, fmtPrice, fmtShares } from '../../lib/format';
+import { fmtCapCn, fmtPrice, fmtShares } from '../../lib/format';
 
 export function FinancialsTab({ symbol }: { symbol: string }) {
   const f = useFinancials(symbol);
@@ -13,12 +13,12 @@ export function FinancialsTab({ symbol }: { symbol: string }) {
   }
 
   const rows: [string, string][] = [
-    ['PE', fmtPrice(f.pe)],
+    ['PE (TTM)', fmtPrice(f.pe)],
     ['PB', fmtPrice(f.pb)],
     ['Turnover', f.turnoverRate != null ? `${f.turnoverRate.toFixed(2)}%` : '—'],
-    ['EPS', fmtPrice(f.eps)],
+    ['EPS (TTM)', fmtPrice(f.eps)],
     ['Dividend Yield', f.dividendYield != null ? `${f.dividendYield.toFixed(2)}%` : '—'],
-    ['Market Cap', fmtCap(f.marketCap)],
+    ['Market Cap', fmtCapCn(f.marketCap)],
     ['Shares Outstanding', fmtShares(f.sharesOutstanding)],
   ];
 
@@ -35,10 +35,8 @@ export function FinancialsTab({ symbol }: { symbol: string }) {
           ))}
         </tbody>
       </table>
-      {f.source !== 'finnhub' && (
-        <p className="mt-2 border-t border-dashed border-slate-200 pt-2 text-[11px] text-slate-400">
-          未配置 Finnhub key，仅显示腾讯行情可提供的指标；配置后可显示完整 PE/PB/EPS/股息。
-        </p>
+      {f.source !== 'tencent' && (
+        <p className="mt-2 border-t border-dashed border-slate-200 pt-2 text-[11px] text-slate-400">暂无数据</p>
       )}
     </div>
   );

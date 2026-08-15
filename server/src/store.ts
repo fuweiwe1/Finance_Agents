@@ -21,7 +21,7 @@ export class FileStore {
   }
 
   getWatchlist(): string[] {
-    return this.data.watchlist ?? ['TSLA', 'AAPL', 'NVDA'];
+    return this.data.watchlist ?? ['600519', '000001', '300750']; // 茅台/平安/宁德
   }
   setWatchlist(list: string[]): void {
     this.data.watchlist = list;
