@@ -1,12 +1,13 @@
 import { Router } from 'express';
+import { FileStore } from '../store.js';
 import { normalizeSymbol } from '../market/normalize.js';
 
-const DEFAULT_WATCHLIST = ['TSLA', 'AAPL', 'NVDA'];
-
-/** 自选股内存存储（进程内；前端另有 localStorage 镜像做展示） */
-export function watchlistRoutes(): Router {
+/** 自选股：内存数组 + FileStore 持久化（重启不丢） */
+export function watchlistRoutes(store: FileStore): Router {
   const r = Router();
-  const list: string[] = [...DEFAULT_WATCHLIST];
+  const list: string[] = [...store.getWatchlist()];
+
+  const persist = () => store.setWatchlist(list);
 
   r.get('/', (_req, res) => res.json(list));
 
@@ -18,12 +19,14 @@ export function watchlistRoutes(): Router {
       return;
     }
     if (!list.includes(norm.symbol)) list.push(norm.symbol);
+    persist();
     res.json(list);
   });
 
   r.delete('/:symbol', (req, res) => {
     const idx = list.indexOf(String(req.params.symbol).toUpperCase());
     if (idx >= 0) list.splice(idx, 1);
+    persist();
     res.json(list);
   });
 

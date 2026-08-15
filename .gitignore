@@ -12,3 +12,6 @@ npm-install.log
 npm-install*.log
 test-results/
 playwright-report/
+
+# 服务端持久化数据（含模型 API key，绝不入库）
+.data/

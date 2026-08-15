@@ -14,9 +14,16 @@ export interface ToolEvent {
   result?: unknown;
 }
 
+export interface UsageInfo {
+  input?: number;
+  output?: number;
+  cost?: number;
+}
+
 interface ChatState {
   messagesBySession: Record<string, ChatMessage[]>;
   toolsBySession: Record<string, ToolEvent[]>;
+  usageBySession: Record<string, UsageInfo>;
   streaming: boolean;
   error: string | null;
   send: (
@@ -30,6 +37,7 @@ interface ChatState {
 export const useChatStore = create<ChatState>((set) => ({
   messagesBySession: {},
   toolsBySession: {},
+  usageBySession: {},
   streaming: false,
   error: null,
 
@@ -37,9 +45,11 @@ export const useChatStore = create<ChatState>((set) => ({
     set((s) => {
       const messagesBySession = { ...s.messagesBySession };
       const toolsBySession = { ...s.toolsBySession };
+      const usageBySession = { ...s.usageBySession };
       delete messagesBySession[sessionId];
       delete toolsBySession[sessionId];
-      return { messagesBySession, toolsBySession };
+      delete usageBySession[sessionId];
+      return { messagesBySession, toolsBySession, usageBySession };
     });
   },
 
@@ -118,6 +128,11 @@ export const useChatStore = create<ChatState>((set) => ({
             continue;
           }
 
+          if (event === 'chat_end') {
+            const u = (data as { usage?: UsageInfo }).usage;
+            if (u) set((s) => ({ usageBySession: { ...s.usageBySession, [sessionId]: u } }));
+            continue;
+          }
           if (event === 'error') {
             appendDelta(`⚠️ ${String(data.message ?? '发生错误')}`);
             continue;

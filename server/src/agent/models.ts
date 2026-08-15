@@ -1,6 +1,7 @@
 import { createModels, createProvider, type Model, type Models } from '@earendil-works/pi-ai';
 import { openAICompletionsApi } from '@earendil-works/pi-ai/api/openai-completions.lazy';
 import type { StreamFn } from '@earendil-works/pi-agent-core';
+import type { FileStore } from '../store.js';
 
 export type ModelProvider = 'custom-openai' | 'openai';
 
@@ -66,12 +67,21 @@ function buildModels(cfg: ModelConfig): Models {
 export class ModelManager {
   private config: ModelConfig = { ...DEFAULT_MODEL_CONFIG };
   private models: Models | null = null;
+  private readonly store?: FileStore;
 
-  /** 测试用：注入预构建的 Models 集合（如 fauxProvider）绕过真实 provider */
-  constructor(injected?: { models: Models; config?: Partial<ModelConfig> }) {
-    if (injected) {
-      this.models = injected.models;
-      this.config = { ...this.config, ...injected.config };
+  /**
+   * 测试/持久化注入：
+   * - `models` 传入预构建集合（如 fauxProvider）绕过真实 provider；
+   * - `store` 提供后：无注入 models 时从 store 恢复上次配置，setConfig 时持久化。
+   */
+  constructor(opts: { models?: Models; config?: Partial<ModelConfig>; store?: FileStore } = {}) {
+    this.store = opts.store;
+    if (opts.models) {
+      this.models = opts.models;
+      if (opts.config) this.config = { ...this.config, ...opts.config };
+    } else if (opts.store) {
+      const saved = opts.store.getModelConfig();
+      if (saved) this.config = { ...saved };
     }
   }
 
@@ -86,6 +96,7 @@ export class ModelManager {
   setConfig(cfg: ModelConfig): void {
     this.config = { ...cfg };
     this.models = buildModels(this.config);
+    this.store?.setModelConfig(this.config);
   }
 
   getModel(): Model<any> | null {

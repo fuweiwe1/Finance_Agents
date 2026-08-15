@@ -79,7 +79,8 @@ export function agentRoutes(models: ModelManager, market: CompositeProvider, ses
     try {
       await agent.prompt(message, (e) => send('agent_event', e));
       sessions.bumpMsgCount(meta.id);
-      send('chat_end', { ok: true, msgCount: meta.msgCount });
+      const usage = agent.lastUsage();
+      send('chat_end', { ok: true, msgCount: meta.msgCount, usage });
     } catch (err) {
       console.error('[agent] chat error:', err);
       send('error', { message: err instanceof Error ? err.message : 'unknown error' });

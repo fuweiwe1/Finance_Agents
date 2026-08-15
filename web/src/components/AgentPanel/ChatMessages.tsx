@@ -10,6 +10,7 @@ export function ChatMessages() {
   const rawMessages = useChatStore((s) => (activeSessionId ? s.messagesBySession[activeSessionId] : undefined));
   const rawTools = useChatStore((s) => (activeSessionId ? s.toolsBySession[activeSessionId] : undefined));
   const error = useChatStore((s) => s.error);
+  const usage = useChatStore((s) => (activeSessionId ? s.usageBySession[activeSessionId] : undefined));
   const messages = rawMessages ?? NO_MESSAGES;
   const tools = rawTools ?? NO_TOOLS;
 
@@ -60,9 +61,14 @@ export function ChatMessages() {
         </div>
       ))}
 
-      {error && (
-        <div className="my-2 rounded-md bg-red-50 px-3 py-2 text-xs text-red-600">{error}</div>
+      {usage && (usage.input != null || usage.output != null) && (
+        <div className="mb-2 text-right text-[10px] text-slate-300">
+          本轮 {usage.input ?? '?'} in / {usage.output ?? '?'} out
+          {usage.cost != null ? ` · $${usage.cost.toFixed(4)}` : ''}
+        </div>
       )}
+
+      {error && <div className="my-2 rounded-md bg-red-50 px-3 py-2 text-xs text-red-600">{error}</div>}
     </div>
   );
 }

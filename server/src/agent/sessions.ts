@@ -1,3 +1,4 @@
+import type { FileStore } from '../store.js';
 import type { ModelManager } from './models.js';
 import type { CompositeProvider } from '../market/composite.js';
 import { SessionAgent } from './sessionAgent.js';
@@ -13,10 +14,14 @@ function genId(): string {
   return Math.random().toString(36).slice(2, 10);
 }
 
-/** 会话内存存储 + 每会话 Agent 生命周期管理（模型配置变更时整体失效） */
+/** 会话内存存储 + 每会话 Agent 生命周期管理（模型配置变更时整体失效）；元数据可持久化 */
 export class SessionStore {
   private sessions = new Map<string, SessionMeta>();
   private agents = new Map<string, SessionAgent>();
+
+  constructor(private readonly store?: FileStore) {
+    for (const m of store?.getSessions() ?? []) this.sessions.set(m.id, m);
+  }
 
   create(title = 'New Session'): SessionMeta {
     const meta: SessionMeta = {
@@ -26,6 +31,7 @@ export class SessionStore {
       createdAt: new Date().toISOString(),
     };
     this.sessions.set(meta.id, meta);
+    this.persist();
     return meta;
   }
 
@@ -39,12 +45,17 @@ export class SessionStore {
 
   delete(id: string): boolean {
     this.agents.delete(id);
-    return this.sessions.delete(id);
+    const ok = this.sessions.delete(id);
+    if (ok) this.persist();
+    return ok;
   }
 
   bumpMsgCount(id: string): void {
     const s = this.sessions.get(id);
-    if (s) s.msgCount += 1;
+    if (s) {
+      s.msgCount += 1;
+      this.persist();
+    }
   }
 
   agent(id: string, models: ModelManager, market: CompositeProvider): SessionAgent {
@@ -59,5 +70,9 @@ export class SessionStore {
   /** 模型配置变更时调用：丢弃所有会话 Agent，下次请求用新模型重建 */
   invalidateAgents(): void {
     this.agents.clear();
+  }
+
+  private persist(): void {
+    this.store?.setSessions([...this.sessions.values()]);
   }
 }

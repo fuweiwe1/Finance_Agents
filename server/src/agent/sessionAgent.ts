@@ -1,8 +1,31 @@
-import { Agent, type AgentEvent } from '@earendil-works/pi-agent-core';
+import {
+  Agent,
+  estimateTokens,
+  type AgentEvent,
+  type AgentMessage,
+} from '@earendil-works/pi-agent-core';
+import type { AssistantMessage, Usage } from '@earendil-works/pi-ai';
 import type { ModelManager } from './models.js';
 import { buildTools } from './tools.js';
 import { buildSystemPrompt, type StockContext } from './prompt.js';
 import type { CompositeProvider } from '../market/composite.js';
+
+/** 长会话保护：估计 token 超阈值时从旧到新剪枝（至少保留最近一条） */
+const MAX_CTX_TOKENS = 30_000;
+
+async function pruneContext(messages: AgentMessage[]): Promise<AgentMessage[]> {
+  let total = 0;
+  const keep: AgentMessage[] = [];
+  for (let i = messages.length - 1; i >= 0; i--) {
+    const m = messages[i];
+    if (!m) continue;
+    const t = estimateTokens(m);
+    if (keep.length > 0 && total + t > MAX_CTX_TOKENS) break;
+    total += t;
+    keep.unshift(m);
+  }
+  return keep;
+}
 
 /**
  * 每个会话持有一个 pi-agent-core Agent，保持上下文（消息历史）。
@@ -31,6 +54,7 @@ export class SessionAgent {
         tools: buildTools(this.market),
       },
       streamFn: this.models.streamFn(),
+      transformContext: pruneContext,
     });
     return this.agent;
   }
@@ -50,4 +74,25 @@ export class SessionAgent {
       unsub();
     }
   }
+
+  /** 最近一条助手消息的 token/cost 用量（pi-ai usage），无则 null */
+  lastUsage(): { input?: number; output?: number; cost?: number } | null {
+    if (!this.agent) return null;
+    const messages = this.agent.state.messages;
+    for (let i = messages.length - 1; i >= 0; i--) {
+      const m = messages[i];
+      if (m && isAssistantWithUsage(m)) {
+        return {
+          input: m.usage.input,
+          output: m.usage.output,
+          cost: m.usage.cost?.total,
+        };
+      }
+    }
+    return null;
+  }
+}
+
+function isAssistantWithUsage(m: AgentMessage): m is AssistantMessage & { usage: Usage } {
+  return m.role === 'assistant' && 'usage' in m && m.usage !== undefined;
 }
