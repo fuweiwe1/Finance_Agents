@@ -59,10 +59,10 @@ describe('市场 API 契约（桩 Provider + 真实 A 股解析）', () => {
     expect(res.body.pe).toBeCloseTo(20.6, 2);
   });
 
-  it('GET /api/market/news → 空数组', async () => {
+  it('GET /api/market/news 返回新闻数组', async () => {
     const res = await request(createApp({ market: stubMarket() })).get('/api/market/news').query({ symbol: '600519' });
     expect(res.status).toBe(200);
-    expect(res.body).toEqual([]);
+    expect(Array.isArray(res.body)).toBe(true);
   });
 
   it('GET /api/market/kline 腾讯日K', async () => {

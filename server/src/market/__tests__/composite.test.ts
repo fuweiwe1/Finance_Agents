@@ -1,5 +1,5 @@
 import { readFileSync } from 'node:fs';
-import { describe, it, expect, afterEach } from 'vitest';
+import { describe, it, expect, vi, afterEach } from 'vitest';
 import { CompositeProvider } from '../composite.js';
 import { parseTencentAshareQuote } from '../tencent.js';
 import { parseSinaAshareQuote } from '../sina.js';
@@ -68,9 +68,24 @@ describe('CompositeProvider（A股 · 注入桩 Provider）', () => {
     expect(f!.eps).toBeCloseTo(1341.99 / 20.6, 1);
   });
 
-  it('getNews 返回空（A股新闻暂未接入）', async () => {
+  it('getNews 走东财并按股票名搜索', async () => {
+    const body = `cb({"code":0,"result":{"cmsArticleWebOld":[
+      {"date":"2026-08-15 16:51:11","code":"abc123","title":"<em>茅台</em>渠道改革半年考","content":"<em>贵州茅台</em>披露半年报。","url":"http://finance.eastmoney.com/a/abc123.html","mediaName":"北京商报"}
+    ]}})`;
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (url: string | URL) => {
+        const u = String(url);
+        if (u.includes('qt.gtimg.cn')) return new Response(quoteLine('sh600519'), { status: 200 });
+        if (u.includes('search-api-web.eastmoney.com')) return new Response(body, { status: 200 });
+        throw new Error(`unexpected: ${u}`);
+      }),
+    );
     const m = new CompositeProvider({}, { tencent: stubTencent(), sina: stubSina() });
-    expect(await m.getNews('600519', 5)).toEqual([]);
+    const news = await m.getNews('600519', 3);
+    expect(news).toHaveLength(1);
+    expect(news[0]!.title).toBe('茅台渠道改革半年考');
+    expect(news[0]!.source).toBe('北京商报');
   });
 
   it('日K 走腾讯', async () => {

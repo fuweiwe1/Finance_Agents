@@ -27,7 +27,12 @@ async function main() {
     );
 
     const news = await market.getNews(s, 3);
-    console.log(`  新闻 ${news.length} 条（A股新闻暂未接入）`);
+    if (news.length) {
+      console.log(`  新闻 ${news.length} 条:`);
+      for (const n of news) console.log(`    - [${n.source}] ${n.title}`);
+    } else {
+      console.log('  新闻 0 条');
+    }
 
     const k = await market.getKline(s, 'day', 5);
     const last = k.at(-1);

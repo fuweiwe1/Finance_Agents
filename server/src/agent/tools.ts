@@ -33,9 +33,9 @@ export function buildTools(market: CompositeProvider): AgentTool<any, any>[] {
     {
       name: 'get_quote',
       label: '实时报价',
-      description: '获取美股实时报价：现价、涨跌幅、今开、最高、最低、昨收、成交量、52周高低、总市值、盘后价等。',
+      description: '获取A股实时报价：现价、涨跌幅、今开、最高、最低、昨收、成交量、一年高低、总市值等。',
       parameters: Type.Object({
-        symbol: Type.String({ description: '美股代码，如 TSLA / AAPL' }),
+        symbol: Type.String({ description: 'A股代码，如 600519 / 000001' }),
       }),
       execute: async (_toolCallId: string, params: unknown) => {
         const p = (params ?? {}) as QuoteArgs;
@@ -64,9 +64,9 @@ export function buildTools(market: CompositeProvider): AgentTool<any, any>[] {
     {
       name: 'get_financials',
       label: '基本面/估值',
-      description: '获取美股基本面：PE、PB、换手率、总市值、EPS、股息率、总股本。',
+      description: '获取A股基本面：PE、PB、换手率、总市值、EPS、股息率、总股本。',
       parameters: Type.Object({
-        symbol: Type.String({ description: '美股代码，如 TSLA' }),
+        symbol: Type.String({ description: 'A股代码，如 600519' }),
       }),
       execute: async (_toolCallId: string, params: unknown) => {
         const p = (params ?? {}) as FinancialsArgs;
@@ -89,9 +89,9 @@ export function buildTools(market: CompositeProvider): AgentTool<any, any>[] {
     {
       name: 'get_news',
       label: '新闻',
-      description: '获取美股最近新闻标题与摘要。',
+      description: '获取A股最近新闻标题与摘要。',
       parameters: Type.Object({
-        symbol: Type.String({ description: '美股代码，如 TSLA' }),
+        symbol: Type.String({ description: 'A股代码，如 600519' }),
         limit: Type.Optional(Type.Number({ description: '返回条数，默认 5，最多 10' })),
       }),
       execute: async (_toolCallId: string, params: unknown) => {
@@ -110,9 +110,9 @@ export function buildTools(market: CompositeProvider): AgentTool<any, any>[] {
     {
       name: 'get_kline',
       label: '日K线',
-      description: '获取美股最近日 K 线（open/high/low/close），用于判断近期走势。',
+      description: '获取A股最近日 K 线（open/high/low/close），用于判断近期走势。',
       parameters: Type.Object({
-        symbol: Type.String({ description: '美股代码，如 TSLA' }),
+        symbol: Type.String({ description: 'A股代码，如 600519' }),
         count: Type.Optional(Type.Number({ description: 'K线根数，默认 30，最多 120' })),
       }),
       execute: async (_toolCallId: string, params: unknown) => {

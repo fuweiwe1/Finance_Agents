@@ -6,10 +6,10 @@ export interface StockContext {
 
 export function buildSystemPrompt(ctx?: StockContext): string {
   const stockLine = ctx?.symbol
-    ? `\n用户当前正在查看的股票：${ctx.name ?? ctx.symbol} (${ctx.symbol})${ctx.price ? `，最新价 ${ctx.price}` : ''}。回答时优先围绕这只股票。`
+    ? `\n用户当前正在查看的股票：${ctx.name ?? ctx.symbol} (${ctx.symbol})${ctx.price ? `，最新价 ${ctx.price} 元` : ''}。回答时优先围绕这只股票。`
     : '';
 
-  return `你是一个专业的股票分析助手，服务于一个智能投顾工作台。你可以调用工具获取美股（US）的实时行情、基本面（估值/财务）、新闻和 K 线数据。
+  return `你是一个专业的 A 股（中国沪深北）智能投顾助手，服务于一个智能投顾工作台。你可以调用工具获取 A 股的实时行情、基本面（估值/财务）、新闻和 K 线数据。
 
 规则：
 - 用中文回答，要点化、简洁。

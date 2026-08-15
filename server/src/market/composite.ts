@@ -3,18 +3,20 @@ import { normalizeSymbol } from './normalize.js';
 import type { MarketDataProvider } from './provider.js';
 import { TencentProvider } from './tencent.js';
 import { SinaProvider } from './sina.js';
+import { fetchNewsByName } from './eastmoneyNews.js';
 import { TTLCache } from './cache.js';
 
 export interface CompositeOptions {
   quoteTtlMs?: number; // 默认 10s
   klineTtlMs?: number; // 默认 1h
+  newsTtlMs?: number; // 默认 10min
 }
 
 /**
  * 组合 Provider（仅 A 股，全部国内免费源）：
  * - 行情(报价/批量) → 腾讯，失败兜底新浪；
  * - 基本面 → 腾讯报价字段（PE/PB/换手/市值/股本/EPS 推导）；
- * - 新闻 → 暂未接入，返回空（UI 引导）；
+ * - 新闻 → 东方财富（按股票名搜索）；
  * - 日K → 腾讯 fqkline（qfqday）。
  */
 export class CompositeProvider implements MarketDataProvider {
@@ -23,6 +25,7 @@ export class CompositeProvider implements MarketDataProvider {
   private readonly sina: SinaProvider;
   private readonly quoteCache: TTLCache<MarketQuote | null>;
   private readonly klineCache: TTLCache<KlineBar[]>;
+  private readonly newsCache: TTLCache<NewsItem[]>;
 
   /** deps 仅供测试注入桩 Provider */
   constructor(
@@ -33,6 +36,7 @@ export class CompositeProvider implements MarketDataProvider {
     this.sina = deps.sina ?? new SinaProvider();
     this.quoteCache = new TTLCache(opts.quoteTtlMs ?? 10_000);
     this.klineCache = new TTLCache(opts.klineTtlMs ?? 3_600_000);
+    this.newsCache = new TTLCache(opts.newsTtlMs ?? 600_000);
   }
 
   async getQuote(symbol: string): Promise<MarketQuote | null> {
@@ -76,9 +80,21 @@ export class CompositeProvider implements MarketDataProvider {
     };
   }
 
-  async getNews(_symbol: string, _limit = 10): Promise<NewsItem[]> {
-    // A 股免费新闻接口暂未接入，返回空（前端显示引导文案）
-    return [];
+  async getNews(symbol: string, limit = 10): Promise<NewsItem[]> {
+    const norm = normalizeSymbol(symbol);
+    if (!norm) return [];
+    const key = `${norm.symbol.toLowerCase()}:${limit}`;
+    return this.newsCache.get(key, async () => {
+      // 东财按股票名搜索；先取报价拿名字，失败用代码兜底
+      const q = await this.getQuote(norm.symbol).catch(() => null);
+      const name = q?.name ?? norm.symbol;
+      try {
+        return await fetchNewsByName(name, limit);
+      } catch (err) {
+        console.warn(`[composite] news failed for ${symbol}: ${(err as Error).message}`);
+        return [];
+      }
+    });
   }
 
   async getKline(symbol: string, interval = 'day', count = 120): Promise<KlineBar[]> {
