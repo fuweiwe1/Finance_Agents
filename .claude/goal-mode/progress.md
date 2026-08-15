@@ -26,6 +26,11 @@ updated: 2026-08-15
 
 ## M0–M6 全部完成 ✅
 
+## 后续修复任务 ✅
+- **Agent 面板可拖拽伸缩**：拖拽手柄 + 宽度限幅(300-640) + localStorage 记忆；中部 flex 随动，E2E 拖拽用例通过（面板变宽/中部变窄/无横向溢出）。
+- **重启后模型配置失效 bug**：ModelManager 从 store 恢复配置时立即构建 pi-ai Models 集合（此前 UI 显示"已配置"但 getModel() 为 null，对话报"模型未配置"）；新增 models.test.ts 回归测试。
+- **E2E 稳定性**：原因定位为 Chromium 对 `127.0.0.1` 走系统代理(死代理)导致连接拒绝，`localhost` 绕过代理；回退到 `localhost` + 移除了 globalSetup 的 taskkill，E2E 3/3 稳定通过。
+
 ## 关键备注
 
 - npm 安装卡顿根因：全局 npm 代理 `127.0.0.1:7890`（Clash）失效 → 项目 `.npmrc` 用 `noproxy=*` + `registry=npmmirror` 直连解决。

@@ -72,7 +72,8 @@ export class ModelManager {
   /**
    * 测试/持久化注入：
    * - `models` 传入预构建集合（如 fauxProvider）绕过真实 provider；
-   * - `store` 提供后：无注入 models 时从 store 恢复上次配置，setConfig 时持久化。
+   * - `store` 提供后：无注入 models 时从 store 恢复配置并**立即构建 Models 集合**（否则重启后
+   *   UI 显示"已配置"但 getModel() 为 null，对话报"模型未配置"）；setConfig 时持久化。
    */
   constructor(opts: { models?: Models; config?: Partial<ModelConfig>; store?: FileStore } = {}) {
     this.store = opts.store;
@@ -81,7 +82,10 @@ export class ModelManager {
       if (opts.config) this.config = { ...this.config, ...opts.config };
     } else if (opts.store) {
       const saved = opts.store.getModelConfig();
-      if (saved) this.config = { ...saved };
+      if (saved) {
+        this.config = { ...saved };
+        this.models = buildModels(this.config);
+      }
     }
   }
 
