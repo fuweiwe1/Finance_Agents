@@ -1,0 +1,23 @@
+npm warn invalid config proxy="" set in C:\finance_agents\.npmrc
+npm warn invalid config Must be full url with "http://"
+npm warn invalid config https-proxy="" set in C:\finance_agents\.npmrc
+npm warn invalid config Must be full url with "http://"
+
+> finance_agents@0.1.0 dev:server
+> npm run dev -w server
+
+npm warn invalid config proxy="" set in C:\finance_agents\.npmrc
+npm warn invalid config Must be full url with "http://"
+npm warn invalid config https-proxy="" set in C:\finance_agents\.npmrc
+npm warn invalid config Must be full url with "http://"
+
+> server@0.1.0 dev
+> tsx watch src/index.ts
+
+[server] listening on http://localhost:3001
+14:12:15 [tsx] change in ./src\index.ts Restarting...
+[server] listening on http://localhost:3001
+[server] finnhub key: 已配置
+14:13:47 [tsx] change in ./src\market\finnhub.ts Restarting...
+[server] listening on http://localhost:3001
+[server] finnhub key: 已配置

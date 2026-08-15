@@ -64,7 +64,8 @@ export class FinnhubProvider implements MarketDataProvider {
       pb: (m['pb'] as number | undefined) ?? null,
       eps: (m['epsTTM'] as number | undefined) ?? null,
       dividendYield: (m['dividendYieldIndicatedAnnual'] as number | undefined) ?? null,
-      sharesOutstanding: profileRes.shareOutstanding ?? null,
+      // Finnhub profile2 的 shareOutstanding/marketCapitalization 单位都是「百万」
+      sharesOutstanding: profileRes.shareOutstanding !== undefined ? profileRes.shareOutstanding * 1e6 : null,
       marketCap: profileRes.marketCapitalization !== undefined ? profileRes.marketCapitalization * 1e6 : null,
       turnoverRate: null,
       source: 'finnhub',

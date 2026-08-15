@@ -1,5 +1,13 @@
-import 'dotenv/config';
+import dotenv from 'dotenv';
 import { resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+// 显式加载仓库根目录 .env（server/src/config.ts → ../../ = 仓库根），
+// 避免 dotenv 默认只读 process.cwd()（npm workspace 下 cwd=server/）导致读不到根目录 .env。
+const repoRoot = fileURLToPath(new URL('../../', import.meta.url));
+dotenv.config({ path: resolve(repoRoot, '.env') });
+// 兼容 cwd 下的 server/.env
+dotenv.config({ path: resolve(process.cwd(), '.env') });
 
 export const config = {
   port: Number(process.env.PORT ?? 3001),

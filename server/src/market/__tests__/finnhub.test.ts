@@ -16,7 +16,7 @@ describe('FinnhubProvider', () => {
           );
         }
         if (u.includes('/stock/profile2')) {
-          return new Response(JSON.stringify({ shareOutstanding: 3200000000, marketCapitalization: 1100000 }), {
+          return new Response(JSON.stringify({ shareOutstanding: 3200, marketCapitalization: 1100000 }), {
             status: 200,
           });
         }

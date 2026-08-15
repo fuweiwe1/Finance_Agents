@@ -75,7 +75,7 @@ describe('CompositeProvider（注入桩 Provider）', () => {
         if (u.includes('/stock/metric'))
           return new Response(JSON.stringify({ metric: { peTTM: 20.5, pb: 8.2, epsTTM: 10.1 } }), { status: 200 });
         if (u.includes('/stock/profile2'))
-          return new Response(JSON.stringify({ shareOutstanding: 3200000000 }), { status: 200 });
+          return new Response(JSON.stringify({ shareOutstanding: 3200 }), { status: 200 });
         throw new Error(`unexpected: ${u}`);
       }),
     );

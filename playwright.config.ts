@@ -11,7 +11,8 @@ export default defineConfig({
     viewport: { width: 1440, height: 900 },
   },
   webServer: {
-    command: 'npm run dev',
+    // E2E 用隔离数据文件，避免受用户真实 .data 状态（自选/会话/模型配置）影响
+    command: 'set "DATA_FILE=.data/e2e-state.json" && npm run dev',
     url: 'http://localhost:5173',
     reuseExistingServer: true,
     timeout: 120_000,
