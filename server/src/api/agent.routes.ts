@@ -2,8 +2,15 @@ import { Router } from 'express';
 import type { ModelManager } from '../agent/models.js';
 import type { CompositeProvider } from '../market/composite.js';
 import { SessionStore } from '../agent/sessions.js';
+import { TraceCollector } from '../trace/collector.js';
+import type { TraceStore } from '../trace/store.js';
 
-export function agentRoutes(models: ModelManager, market: CompositeProvider, sessions: SessionStore): Router {
+export function agentRoutes(
+  models: ModelManager,
+  market: CompositeProvider,
+  sessions: SessionStore,
+  traces: TraceStore,
+): Router {
   const r = Router();
 
   // ---- 模型配置（key 只存后端内存，不回传前端） ----
@@ -75,16 +82,28 @@ export function agentRoutes(models: ModelManager, market: CompositeProvider, ses
 
     const agent = sessions.agent(meta.id, models, market);
     agent.setContext(ctx);
+    const collector = new TraceCollector({
+      sessionId: meta.id,
+      userMessage: message,
+      modelId: models.getConfig().model,
+      context: ctx,
+    });
     send('chat_start', {});
     try {
-      await agent.prompt(message, (e) => send('agent_event', e));
+      await agent.prompt(message, (e) => {
+        send('agent_event', e);
+        collector.onEvent(e);
+      });
       sessions.bumpMsgCount(meta.id);
       const usage = agent.lastUsage();
+      collector.finish();
       send('chat_end', { ok: true, msgCount: meta.msgCount, usage });
     } catch (err) {
       console.error('[agent] chat error:', err);
+      collector.finish(err);
       send('error', { message: err instanceof Error ? err.message : 'unknown error' });
     } finally {
+      traces.append(collector.trace);
       res.end();
     }
   });

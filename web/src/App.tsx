@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { Sidebar } from './components/Sidebar/Sidebar';
 import { StockDetailPanel } from './components/StockDetail/StockDetailPanel';
 import { AgentPanel } from './components/AgentPanel/AgentPanel';
+import { TracesModal } from './components/Traces/TracesModal';
 import { useAppStore } from './state/useAppStore';
 
 const MIN_PANEL_W = 300;
@@ -15,6 +16,7 @@ function clampWidth(w: number): number {
 export default function App() {
   const init = useAppStore((s) => s.init);
   const [agentPanelOpen, setAgentPanelOpen] = useState(true);
+  const [tracesOpen, setTracesOpen] = useState(false);
   const [agentPanelWidth, setAgentPanelWidth] = useState<number>(() => {
     try {
       const saved = Number(localStorage.getItem('agentPanelWidth'));
@@ -63,7 +65,11 @@ export default function App() {
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-slate-100 text-slate-900">
       <aside className="flex h-full w-64 shrink-0 flex-col border-r border-slate-200 bg-white">
-        <Sidebar agentPanelOpen={agentPanelOpen} onToggleAgent={() => setAgentPanelOpen((v) => !v)} />
+        <Sidebar
+          agentPanelOpen={agentPanelOpen}
+          onToggleAgent={() => setAgentPanelOpen((v) => !v)}
+          onOpenTraces={() => setTracesOpen(true)}
+        />
       </aside>
 
       {/* 中部详情：min-w-0 防止面板变宽时溢出 */}
@@ -84,6 +90,8 @@ export default function App() {
           </section>
         </>
       )}
+
+      {tracesOpen && <TracesModal onClose={() => setTracesOpen(false)} />}
     </div>
   );
 }

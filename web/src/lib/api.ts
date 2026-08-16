@@ -51,7 +51,25 @@ export const api = {
   },
 
   chatUrl: (id: string) => `${BASE}/agent/sessions/${id}/chat`,
+
+  traces: {
+    list: (params?: { sessionId?: string; outcome?: string; limit?: number }) =>
+      request<AgentTrace[]>(`/traces${qs(params)}`),
+    get: (id: string) => request<AgentTrace>(`/traces/${encodeURIComponent(id)}`),
+    feedback: (id: string, rating: number, reason?: string) =>
+      request<{ ok: boolean }>(`/traces/${encodeURIComponent(id)}/feedback`, {
+        method: 'POST',
+        body: JSON.stringify({ rating, reason }),
+      }),
+  },
 };
+
+function qs(params?: Record<string, string | number | undefined>): string {
+  if (!params) return '';
+  const entries = Object.entries(params).filter(([, v]) => v !== undefined);
+  if (!entries.length) return '';
+  return '?' + entries.map(([k, v]) => `${k}=${encodeURIComponent(String(v))}`).join('&');
+}
 
 // ---- 类型（与后端契约一致） ----
 export interface MarketQuote {
@@ -139,4 +157,42 @@ export interface ModelConfigInput {
   baseUrl: string;
   model: string;
   apiKey: string;
+}
+
+// ---- Traces（与后端 trace/types.ts 契约一致） ----
+export interface TraceToolCall {
+  toolName: string;
+  args: unknown;
+  result?: unknown;
+  isError: boolean;
+  startedAt: number;
+  latencyMs: number;
+}
+
+export interface TraceTurn {
+  modelId: string;
+  startedAt: number;
+  endedAt: number;
+  latencyMs: number;
+  inputTokens?: number;
+  outputTokens?: number;
+  cost?: number;
+  responseText?: string;
+  toolCalls: TraceToolCall[];
+  stopReason?: string;
+  error?: string;
+}
+
+export interface AgentTrace {
+  id: string;
+  sessionId: string;
+  userMessage: string;
+  context?: { symbol?: string; name?: string };
+  startedAt: number;
+  endedAt: number;
+  totalMs: number;
+  turns: TraceTurn[];
+  outcome: 'ok' | 'error';
+  errorMessage?: string;
+  feedback?: { rating: number; reason?: string };
 }

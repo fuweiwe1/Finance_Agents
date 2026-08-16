@@ -1,5 +1,7 @@
-import { readFileSync } from 'node:fs';
-import { describe, it, expect } from 'vitest';
+import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { describe, it, expect, afterEach } from 'vitest';
 import request from 'supertest';
 import { createModels, fauxProvider, fauxToolCall, fauxAssistantMessage } from '@earendil-works/pi-ai';
 import { createApp } from '../app.js';
@@ -7,12 +9,23 @@ import { ModelManager, type ModelProvider } from '../agent/models.js';
 import { SessionStore } from '../agent/sessions.js';
 import { CompositeProvider } from '../market/composite.js';
 import { parseTencentAshareQuote } from '../market/tencent.js';
+import { TraceStore } from '../trace/store.js';
 import type { TencentProvider } from '../market/tencent.js';
 import type { SinaProvider } from '../market/sina.js';
 
 const fixture = (name: string) => readFileSync(new URL(`../market/__tests__/fixtures/${name}`, import.meta.url), 'utf8');
 const quoteLine = (code: string) =>
   fixture('tencent.ashare.quote.txt').split('\n').find((l) => l.startsWith(`v_${code}=`))!;
+
+const tempDirs: string[] = [];
+function tempTraceStore(): TraceStore {
+  const dir = mkdtempSync(join(tmpdir(), 'fa-chat-tr-'));
+  tempDirs.push(dir);
+  return new TraceStore(join(dir, 'traces.jsonl'));
+}
+afterEach(() => {
+  for (const d of tempDirs.splice(0)) rmSync(d, { recursive: true, force: true });
+});
 
 function stubMarket(): CompositeProvider {
   const tencent = {
@@ -61,7 +74,8 @@ describe('Agent 对话 SSE（fauxProvider 脚本化模型，无 key 可测）', 
       },
     });
     const sessions = new SessionStore();
-    const app = createApp({ models: modelManager, market: stubMarket(), sessions });
+    const traces = tempTraceStore();
+    const app = createApp({ models: modelManager, market: stubMarket(), sessions, traces });
 
     const created = await request(app).post('/api/agent/sessions');
     const id = created.body.id as string;
@@ -91,6 +105,17 @@ describe('Agent 对话 SSE（fauxProvider 脚本化模型，无 key 可测）', 
     // 消息计数 +1
     const list = await request(app).get('/api/agent/sessions');
     expect(list.body.find((s: { id: string }) => s.id === id)?.msgCount).toBe(1);
+
+    // 对话已落盘为一条 trace（含工具调用）
+    const tracesList = traces.list();
+    expect(tracesList).toHaveLength(1);
+    const tr = tracesList[0]!;
+    expect(tr.userMessage).toBe('贵州茅台现在多少钱？');
+    expect(tr.sessionId).toBe(id);
+    expect(tr.outcome).toBe('ok');
+    expect(tr.turns[0]!.toolCalls[0]!.toolName).toBe('get_quote');
+    // 最终文本在后续 turn 的回答里
+    expect(tr.turns.some((t) => (t.responseText ?? '').includes('1341.99'))).toBe(true);
   });
 
   it('无上下文也能对话', async () => {

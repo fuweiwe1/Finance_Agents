@@ -24,6 +24,54 @@ updated: 2026-08-15
 | M6-4 前端适配 | ✅ | 默认自选A股、量(万手)/市值(亿)/时段徽标(交易中·已收盘)、去 Finnhub 提示 |
 | M6-5 测试+验证+文档 | ✅ | demo 真实A股全字段正确；typecheck/lint 绿；server 47+web 2 测试 + E2E 2/2 全过；README 更新 |
 
+## M7 Agent 全链路观测体系
+
+### M7-1 Trace 采集 + JSONL 落盘 + API ✅
+| 项 | 验收证据 |
+|---|---|
+| Trace 数据模型 + Collector | `trace/types.ts` + `collector.ts`：事件流→turn/toolCall/耗时/tokens/回答/outcome；残留中断处理 |
+| TraceStore(JSONL) | `trace/store.ts`：追加落盘 + list(过滤/分页) + get + setFeedback |
+| traces API + chat 接线 | `api/traces.routes.ts`（GET 列表/:id、POST feedback）；chat 路由每次对话生成 trace 并落盘 |
+| 测试 | collector/store/routes 单测+集成 + chat 测试断言 trace 生成（含 get_quote 工具调用）|
+| 实机验证 | 真实 deepseek 对话 → `traces.jsonl` 落盘 → `/api/traces` 查到 1 条（2轮、get_quote、197/265 tokens、outcome ok）|
+| 回归 | typecheck/lint 绿；server 62 + web 2 测试 + E2E 3/3 全过 |
+
+### E2E 稳定性（独立端口方案）✅
+根因：globalSetup 的 taskkill 与新 webServer 存在竞态（vite 起来后被误杀）。彻底方案：**E2E 用独立端口**（web 4173 / api 3101）+ 隔离数据/追踪文件，与开发环境(5173/3001)完全隔离，不杀任何进程、不影响用户数据。vite 端口/代理目标支持环境变量覆盖（WEB_PORT/API_PORT）。
+
+### M7-2 Traces UI 面板（列表+瀑布详情）✅
+| 项 | 验收证据 |
+|---|---|
+| API 客户端+类型 | `web/src/lib/api.ts` 新增 `traces.list/get/feedback` + AgentTrace/TraceTurn/TraceToolCall 类型 |
+| Traces store | `useTracesStore`：load/select/rate（刷新后选中同步）|
+| UI 组件 | `Traces/TracesModal`（弹窗）+ `TraceList`（列表：时间/结果/耗时/轮数/评分）+ `TraceDetail`（瀑布：每轮卡片→工具调用→回答→汇总→1-5星反馈）|
+| 入口 | 底部导航新增 🕵️ Traces 按钮 → 弹窗 |
+| 测试 | E2E 4/4 通过（含 Traces 弹窗打开/空态/关闭）；typecheck/lint 绿；server 62+web 2 |
+| 实机验证 | 真实对话"茅台PE多少？"→ trace 记录 2 轮、调用 get_financials（正确工具），`/api/traces` 供 UI 渲染 |
+
+### M7-3 bad case 导出 + eval runner ✅
+| 项 | 验收证据 |
+|---|---|
+| 评测用例集 | `eval/cases.ts`：5 用例（行情/财务/K线/新闻/回归），expectTool/mustInclude/expectNot |
+| 检查逻辑 | `eval/runner.ts` `evaluateTrace`（纯函数）：outcome/工具调用正确性/数字一致性(仅 get_quote price 强制)/免责/违禁词 |
+| runner | `runCase` 用真实模型+真实数据跑单用例 → trace → 检查 |
+| 脚本 | `npm run eval:agent`：批量重放 → PASS/FAIL 报告 + 平均耗时 + 失败导出 `.data/bad-cases.jsonl` |
+| 测试 | `eval/runner.test.ts` 纯检查逻辑 + faux 集成；**修复 TraceCollector 并行工具 bug**（Map<toolCallId>，原单槽并行串台） |
+| 实机评测 | deepseek 真实跑 **5/5 PASS**：工具选择全对、价格一致、回归(不再提"仅支持美股") |
+
+### M7-4 指标汇总 + 迭代回归对比 ✅
+| 项 | 验收证据 |
+|---|---|
+| 历史记录 | `eval/history.ts`：每次 eval 摘要(ts/模型/pass/avgLatency/tokens/成本/perCase)追加 `.data/eval-history.jsonl` |
+| 对比逻辑 | `compareWithPrevious`（纯函数）：pass/耗时/成本变化 + 回归/改善用例 |
+| eval:agent 增强 | 跑完自动对比上次：`PASS 5/5 ▲ (上次 4/5)` + 改善用例；实机验证 |
+| eval:summary | 趋势表命令：每次运行 PASS/耗时/tokens/成本；实机 2 次记录 4/5→5/5 |
+| 测试 | `history.test.ts`（读写/对比）；又修复数字检查千分位逗号误报（"1,341.99"）；server 75 + web 2 + E2E 4/4 全绿 |
+
+### M7-4 迭代闭环已就绪 ✅
+采集 → trace → UI 观测 → 1-5★反馈 → bad case 导出 → eval 重放 → 指标趋势 → 改 prompt/工具 → 对比回归。
+实机完整跑通：真实 deepseek 5 用例，从 4/5（千分位误报）→ 5/5（修复），趋势表可见。
+
 ## M0–M6 全部完成 ✅
 
 ## 后续修复任务 ✅

@@ -72,6 +72,15 @@ export function fmtTime(iso?: string): string {
   });
 }
 
+/** unix 毫秒时间戳 → "MM-DD HH:mm:ss" */
+export function fmtTs(ts?: number): string {
+  if (!ts) return '';
+  const d = new Date(ts);
+  if (Number.isNaN(d.getTime())) return '';
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+}
+
 export const SESSION_LABEL: Record<string, string> = {
   pre: '集合竞价',
   regular: '交易中',

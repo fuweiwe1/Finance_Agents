@@ -20,7 +20,9 @@
     "test": "npm run test -w server && npm run test -w web",
     "test:e2e": "playwright test",
     "test:watch": "npm run test:watch -w server",
-    "demo": "npm run demo -w server"
+    "demo": "npm run demo -w server",
+    "eval:agent": "npm run eval:agent -w server",
+    "eval:summary": "npm run eval:summary -w server"
   },
   "devDependencies": {
     "@eslint/js": "^9.0.0",

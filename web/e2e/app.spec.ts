@@ -67,4 +67,13 @@ test.describe('股票 Agent 工作台 E2E（A 股）', () => {
     const noOverflow = await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth);
     expect(noOverflow).toBe(true);
   });
+
+  test('Traces 面板可打开并关闭（空态）', async ({ page }) => {
+    await page.goto('/');
+    await page.getByText('Traces', { exact: true }).click();
+    await expect(page.getByText(/Traces · Agent 全链路/)).toBeVisible();
+    await expect(page.getByText(/暂无对话记录/)).toBeVisible();
+    await page.getByText('✕ 关闭').click();
+    await expect(page.getByText(/Traces · Agent 全链路/)).not.toBeVisible();
+  });
 });
