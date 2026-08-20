@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import type { ModelManager } from '../agent/models.js';
-import type { CompositeProvider } from '../market/composite.js';
+import type { CompositeProvider } from '../eval/market/composite.js';
 import { SessionStore } from '../agent/sessions.js';
 import { TraceCollector } from '../trace/collector.js';
 import type { TraceStore } from '../trace/store.js';

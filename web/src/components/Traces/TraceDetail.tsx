@@ -1,5 +1,9 @@
+import { useState } from 'react';
 import type { TraceTurn } from '../../lib/api';
 import { useTracesStore } from '../../state/useTracesStore';
+
+/** 低分原因标签（bad case 分类），供 export:badcases 按类聚合 */
+const RATING_REASONS = ['数字/数据错误', '工具选错', '答非所问', '拒绝服务', '太啰嗦', '其他'];
 
 export function TraceDetail() {
   const selected = useTracesStore((s) => s.selected);
@@ -44,28 +48,92 @@ export function TraceDetail() {
       </div>
 
       {/* 反馈标记（bad case 迭代入口） */}
-      <div className="mt-3 flex items-center gap-1 rounded-lg border border-slate-200 px-3 py-2">
+      <RateControl
+        feedback={selected.feedback}
+        onRate={(rating, reasons) => void rate(selected.id, rating, { reasons })}
+      />
+    </div>
+  );
+}
+
+/** 评分 + 低分原因标签：≤3 分展开标签多选后提交，>3 分直接提交 */
+function RateControl({
+  feedback,
+  onRate,
+}: {
+  feedback?: { rating: number; reason?: string; reasons?: string[] };
+  onRate: (rating: number, reasons: string[]) => void;
+}) {
+  const [picked, setPicked] = useState<number | null>(null);
+  const [tags, setTags] = useState<string[]>([]);
+
+  const pick = (r: number) => {
+    if (r > 3) {
+      setPicked(null);
+      setTags([]);
+      onRate(r, []);
+      return;
+    }
+    setPicked(r);
+    setTags(feedback?.reasons ?? []);
+  };
+
+  const confirm = () => {
+    if (picked == null) return;
+    onRate(picked, tags);
+    setPicked(null);
+    setTags([]);
+  };
+
+  return (
+    <div className="mt-3 rounded-lg border border-slate-200 px-3 py-2">
+      <div className="flex items-center gap-1">
         <span className="mr-1 text-xs text-slate-500">这条回答</span>
         {[1, 2, 3, 4, 5].map((r) => (
           <button
             key={r}
-            onClick={() => void rate(selected.id, r)}
+            onClick={() => pick(r)}
             title={`评分 ${r}`}
             className={`rounded px-1 text-lg transition-colors ${
-              selected.feedback?.rating === r
-                ? 'text-amber-500'
-                : 'text-slate-300 hover:text-amber-400'
+              (feedback?.rating ?? picked) === r ? 'text-amber-500' : 'text-slate-300 hover:text-amber-400'
             }`}
           >
             ★
           </button>
         ))}
-        {selected.feedback?.rating ? (
-          <span className="ml-2 text-[11px] text-slate-400">已标记 {selected.feedback.rating} 分</span>
+        {feedback?.rating ? (
+          <span className="ml-2 text-[11px] text-slate-400">已标记 {feedback.rating} 分</span>
         ) : (
           <span className="ml-2 text-[11px] text-slate-300">（低分将沉淀为 bad case）</span>
         )}
       </div>
+
+      {picked != null && picked <= 3 && (
+        <div className="mt-2 border-t border-slate-100 pt-2">
+          <div className="text-[11px] text-slate-400">哪里不对？（bad case 分类）</div>
+          <div className="mt-1 flex flex-wrap gap-1">
+            {RATING_REASONS.map((tag) => (
+              <button
+                key={tag}
+                onClick={() => setTags((t) => (t.includes(tag) ? t.filter((x) => x !== tag) : [...t, tag]))}
+                className={`rounded-full border px-2 py-0.5 text-[11px] transition-colors ${
+                  tags.includes(tag)
+                    ? 'border-blue-400 bg-blue-50 text-blue-600'
+                    : 'border-slate-200 text-slate-500 hover:border-blue-200'
+                }`}
+              >
+                {tag}
+              </button>
+            ))}
+          </div>
+          <button
+            onClick={confirm}
+            className="mt-2 rounded bg-blue-600 px-3 py-1 text-xs font-medium text-white hover:bg-blue-700"
+          >
+            提交 {picked} 分反馈
+          </button>
+        </div>
+      )}
     </div>
   );
 }

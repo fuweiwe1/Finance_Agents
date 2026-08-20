@@ -25,7 +25,8 @@ export interface TraceTurn {
 
 export interface TraceFeedback {
   rating: number; // 1-5
-  reason?: string;
+  reason?: string; // 自由文本
+  reasons?: string[]; // 原因标签（分类，用于 bad case 聚合）
 }
 
 export interface AgentTrace {

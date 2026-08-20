@@ -1,6 +1,6 @@
 import type { FileStore } from '../store.js';
 import type { ModelManager } from './models.js';
-import type { CompositeProvider } from '../market/composite.js';
+import type { CompositeProvider } from '../eval/market/composite.js';
 import { SessionAgent } from './sessionAgent.js';
 
 export interface SessionMeta {

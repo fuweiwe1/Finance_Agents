@@ -8,10 +8,11 @@ import { appendFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { FileStore } from '../store.js';
 import { ModelManager } from '../agent/models.js';
-import { CompositeProvider } from '../market/composite.js';
+import { CompositeProvider } from '../eval/market/composite.js';
 import { EVAL_CASES } from '../eval/cases.js';
 import { runCase } from '../eval/runner.js';
 import { appendRun, compareWithPrevious, readRuns, type EvalRunSummary } from '../eval/history.js';
+import { loadBadCases } from '../eval/badcases.js';
 import { config } from '../config.js';
 
 async function main(): Promise<void> {
@@ -22,10 +23,15 @@ async function main(): Promise<void> {
     process.exit(1);
   }
   const market = new CompositeProvider();
-  console.log(`[eval] 模型 ${models.getConfig().model} · ${EVAL_CASES.length} 个用例`);
+
+  // 吸收历史 bad case（去重 + 上限），让评测覆盖真实踩过的坑
+  const badFile = resolve(dirname(config.dataFile), 'bad-cases.jsonl');
+  const badCases = loadBadCases(badFile, 15);
+  const allCases = [...EVAL_CASES, ...badCases];
+  console.log(`[eval] 模型 ${models.getConfig().model} · ${allCases.length} 个用例${badCases.length ? `（含 ${badCases.length} 条历史 bad case）` : ''}`);
 
   const results = [];
-  for (const c of EVAL_CASES) {
+  for (const c of allCases) {
     process.stdout.write(`▶ ${c.id}: ${c.message} ... `);
     const r = await runCase(models, market, c);
     results.push(r);

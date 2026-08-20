@@ -1,6 +1,6 @@
 import { Router } from 'express';
-import type { CompositeProvider } from '../market/composite.js';
-import { normalizeSymbol } from '../market/normalize.js';
+import type { CompositeProvider } from '../eval/market/composite.js';
+import { normalizeSymbol } from '../eval/market/normalize.js';
 
 export function marketRoutes(market: CompositeProvider): Router {
   const r = Router();

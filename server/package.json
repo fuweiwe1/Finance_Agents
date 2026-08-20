@@ -12,7 +12,8 @@
     "test:watch": "vitest",
     "demo": "tsx src/scripts/demo.ts",
     "eval:agent": "tsx src/scripts/evalAgent.ts",
-    "eval:summary": "tsx src/scripts/evalSummary.ts"
+    "eval:summary": "tsx src/scripts/evalSummary.ts",
+    "export:badcases": "tsx src/scripts/exportBadcases.ts"
   },
   "dependencies": {
     "@earendil-works/pi-agent-core": "^0.84.0",

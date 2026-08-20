@@ -2,14 +2,14 @@ import { readFileSync } from 'node:fs';
 import { describe, it, expect } from 'vitest';
 import request from 'supertest';
 import { createApp } from '../app.js';
-import { CompositeProvider } from '../market/composite.js';
-import { parseTencentAshareQuote } from '../market/tencent.js';
-import { parseSinaAshareQuote } from '../market/sina.js';
-import type { KlineBar } from '../market/types.js';
-import type { TencentProvider } from '../market/tencent.js';
-import type { SinaProvider } from '../market/sina.js';
+import { CompositeProvider } from '../eval/market/composite.js';
+import { parseTencentAshareQuote } from '../eval/market/tencent.js';
+import { parseSinaAshareQuote } from '../eval/market/sina.js';
+import type { KlineBar } from '../eval/market/types.js';
+import type { TencentProvider } from '../eval/market/tencent.js';
+import type { SinaProvider } from '../eval/market/sina.js';
 
-const fixture = (name: string) => readFileSync(new URL(`../market/__tests__/fixtures/${name}`, import.meta.url), 'utf8');
+const fixture = (name: string) => readFileSync(new URL(`../eval/market/__tests__/fixtures/${name}`, import.meta.url), 'utf8');
 const quoteLine = (code: string) =>
   fixture('tencent.ashare.quote.txt').split('\n').find((l) => l.startsWith(`v_${code}=`))!;
 const mtQuote = () => parseTencentAshareQuote(quoteLine('sh600519'), '600519')!;

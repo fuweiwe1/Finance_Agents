@@ -68,9 +68,17 @@ updated: 2026-08-15
 | eval:summary | 趋势表命令：每次运行 PASS/耗时/tokens/成本；实机 2 次记录 4/5→5/5 |
 | 测试 | `history.test.ts`（读写/对比）；又修复数字检查千分位逗号误报（"1,341.99"）；server 75 + web 2 + E2E 4/4 全绿 |
 
-### M7-4 迭代闭环已就绪 ✅
-采集 → trace → UI 观测 → 1-5★反馈 → bad case 导出 → eval 重放 → 指标趋势 → 改 prompt/工具 → 对比回归。
-实机完整跑通：真实 deepseek 5 用例，从 4/5（千分位误报）→ 5/5（修复），趋势表可见。
+### M7-5 bad case 双向闭环（低分反馈导出 + 原因标签 + eval 吸收）✅
+| 项 | 验收证据 |
+|---|---|
+| 原因标签 | TraceFeedback 增加 `reasons:string[]`；Traces 评分 UI ≤3 分展开标签多选（数字错误/工具选错/答非所问/拒绝服务/太啰嗦/其他）+ 提交 |
+| 低分反馈导出 | `npm run export:badcases [--min-rating=N]`：从 traces.jsonl 筛低分（≤2 必收、3 分需原因）→ 去重合并进 bad-cases.jsonl |
+| eval 吸收 | `eval:agent` 自动读 bad-cases.jsonl → 按消息去重（上限 15）→ 并入用例池；实机验证"6 个用例（含 1 条历史 bad case）" |
+| 测试 | `badcases.test.ts`（去重/上限/低分判定/合并）；78 server + 2 web + E2E 4/4 全绿 |
+| 实机闭环 | 真实对话 → 2 分+原因反馈 → export:badcases 导出 → eval 吸收 → 对比回归，全链路跑通 |
+
+### M7-5 迭代闭环已就绪 ✅
+采集 → trace → UI 观测 → 1-5★+原因反馈 → export:badcases 导出 → eval 吸收 → 指标趋势 → 改 prompt/工具 → 对比回归。
 
 ## M0–M6 全部完成 ✅
 

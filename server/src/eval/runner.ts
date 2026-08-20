@@ -1,7 +1,7 @@
 import type { AgentTrace, TraceToolCall } from '../trace/types.js';
 import type { EvalCase } from './cases.js';
 import type { ModelManager } from '../agent/models.js';
-import type { CompositeProvider } from '../market/composite.js';
+import type { CompositeProvider } from './market/composite.js';
 import { SessionAgent } from '../agent/sessionAgent.js';
 import { TraceCollector } from '../trace/collector.js';
 

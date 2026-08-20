@@ -8,7 +8,7 @@ import type { AssistantMessage, Usage } from '@earendil-works/pi-ai';
 import type { ModelManager } from './models.js';
 import { buildTools } from './tools.js';
 import { buildSystemPrompt, type StockContext } from './prompt.js';
-import type { CompositeProvider } from '../market/composite.js';
+import type { CompositeProvider } from '../eval/market/composite.js';
 
 /** 长会话保护：估计 token 超阈值时从旧到新剪枝（至少保留最近一条） */
 const MAX_CTX_TOKENS = 30_000;

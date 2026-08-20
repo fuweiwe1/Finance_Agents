@@ -2,7 +2,7 @@
  * 数据层演示：拉取 A 股真实行情 + 财务 + K线。
  * 运行：npm run demo
  */
-import { CompositeProvider } from '../market/composite.js';
+import { CompositeProvider } from '../eval/market/composite.js';
 
 async function main() {
   const market = new CompositeProvider();

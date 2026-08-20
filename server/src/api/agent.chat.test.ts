@@ -7,13 +7,13 @@ import { createModels, fauxProvider, fauxToolCall, fauxAssistantMessage } from '
 import { createApp } from '../app.js';
 import { ModelManager, type ModelProvider } from '../agent/models.js';
 import { SessionStore } from '../agent/sessions.js';
-import { CompositeProvider } from '../market/composite.js';
-import { parseTencentAshareQuote } from '../market/tencent.js';
+import { CompositeProvider } from '../eval/market/composite.js';
+import { parseTencentAshareQuote } from '../eval/market/tencent.js';
 import { TraceStore } from '../trace/store.js';
-import type { TencentProvider } from '../market/tencent.js';
-import type { SinaProvider } from '../market/sina.js';
+import type { TencentProvider } from '../eval/market/tencent.js';
+import type { SinaProvider } from '../eval/market/sina.js';
 
-const fixture = (name: string) => readFileSync(new URL(`../market/__tests__/fixtures/${name}`, import.meta.url), 'utf8');
+const fixture = (name: string) => readFileSync(new URL(`../eval/market/__tests__/fixtures/${name}`, import.meta.url), 'utf8');
 const quoteLine = (code: string) =>
   fixture('tencent.ashare.quote.txt').split('\n').find((l) => l.startsWith(`v_${code}=`))!;
 

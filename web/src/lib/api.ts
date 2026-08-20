@@ -56,10 +56,10 @@ export const api = {
     list: (params?: { sessionId?: string; outcome?: string; limit?: number }) =>
       request<AgentTrace[]>(`/traces${qs(params)}`),
     get: (id: string) => request<AgentTrace>(`/traces/${encodeURIComponent(id)}`),
-    feedback: (id: string, rating: number, reason?: string) =>
+    feedback: (id: string, rating: number, reason?: string, reasons?: string[]) =>
       request<{ ok: boolean }>(`/traces/${encodeURIComponent(id)}/feedback`, {
         method: 'POST',
-        body: JSON.stringify({ rating, reason }),
+        body: JSON.stringify({ rating, reason, reasons }),
       }),
   },
 };
@@ -194,5 +194,5 @@ export interface AgentTrace {
   turns: TraceTurn[];
   outcome: 'ok' | 'error';
   errorMessage?: string;
-  feedback?: { rating: number; reason?: string };
+  feedback?: { rating: number; reason?: string; reasons?: string[] };
 }

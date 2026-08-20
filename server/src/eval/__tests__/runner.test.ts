@@ -3,13 +3,13 @@ import { describe, it, expect } from 'vitest';
 import { createModels, fauxProvider, fauxToolCall, fauxAssistantMessage } from '@earendil-works/pi-ai';
 import { evaluateTrace, runCase } from '../runner.js';
 import { ModelManager, type ModelProvider } from '../../agent/models.js';
-import { CompositeProvider } from '../../market/composite.js';
-import { parseTencentAshareQuote } from '../../market/tencent.js';
+import { CompositeProvider } from '../market/composite.js';
+import { parseTencentAshareQuote } from '../market/tencent.js';
 import type { AgentTrace, TraceToolCall } from '../../trace/types.js';
-import type { TencentProvider } from '../../market/tencent.js';
-import type { SinaProvider } from '../../market/sina.js';
+import type { TencentProvider } from '../market/tencent.js';
+import type { SinaProvider } from '../market/sina.js';
 
-const fixture = (name: string) => readFileSync(new URL(`../../market/__tests__/fixtures/${name}`, import.meta.url), 'utf8');
+const fixture = (name: string) => readFileSync(new URL(`../../eval/market/__tests__/fixtures/${name}`, import.meta.url), 'utf8');
 const quoteLine = (code: string) =>
   fixture('tencent.ashare.quote.txt').split('\n').find((l) => l.startsWith(`v_${code}=`))!;
 

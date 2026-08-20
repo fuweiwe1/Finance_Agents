@@ -3,7 +3,7 @@ import cors from 'cors';
 import type { NextFunction, Request, Response } from 'express';
 import { FileStore } from './store.js';
 import { TraceStore } from './trace/store.js';
-import { CompositeProvider } from './market/composite.js';
+import { CompositeProvider } from './eval/market/composite.js';
 import { ModelManager } from './agent/models.js';
 import { SessionStore } from './agent/sessions.js';
 import { marketRoutes } from './api/market.routes.js';

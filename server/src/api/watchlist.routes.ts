@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { FileStore } from '../store.js';
-import { normalizeSymbol } from '../market/normalize.js';
+import { normalizeSymbol } from '../eval/market/normalize.js';
 
 /** 自选股：内存数组 + FileStore 持久化（重启不丢） */
 export function watchlistRoutes(store: FileStore): Router {

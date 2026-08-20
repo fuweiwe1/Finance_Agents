@@ -8,7 +8,7 @@ interface TracesState {
   error: string | null;
   load: () => Promise<void>;
   select: (id: string) => Promise<void>;
-  rate: (id: string, rating: number, reason?: string) => Promise<void>;
+  rate: (id: string, rating: number, opts?: { reason?: string; reasons?: string[] }) => Promise<void>;
 }
 
 export const useTracesStore = create<TracesState>((set, get) => ({
@@ -39,9 +39,9 @@ export const useTracesStore = create<TracesState>((set, get) => ({
     }
   },
 
-  rate: async (id, rating, reason) => {
-    await api.traces.feedback(id, rating, reason);
-    const feedback = { rating, reason };
+  rate: async (id, rating, opts) => {
+    await api.traces.feedback(id, rating, opts?.reason, opts?.reasons);
+    const feedback = { rating, reason: opts?.reason, reasons: opts?.reasons };
     const traces = get().traces.map((t) => (t.id === id ? { ...t, feedback } : t));
     const selected = get().selected;
     set({

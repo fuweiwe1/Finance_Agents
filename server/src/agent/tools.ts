@@ -1,6 +1,6 @@
 import { Type } from '@earendil-works/pi-ai';
 import type { AgentTool } from '@earendil-works/pi-agent-core';
-import type { CompositeProvider } from '../market/composite.js';
+import type { CompositeProvider } from '../eval/market/composite.js';
 
 /**
  * 生成 AgentTool 结果：content 给模型看，details 给 UI 展示。

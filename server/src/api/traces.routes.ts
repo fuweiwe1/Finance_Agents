@@ -26,15 +26,19 @@ export function tracesRoutes(store: TraceStore): Router {
   });
 
   r.post('/:id/feedback', (req, res) => {
-    const body = (req.body ?? {}) as { rating?: unknown; reason?: unknown };
+    const body = (req.body ?? {}) as { rating?: unknown; reason?: unknown; reasons?: unknown };
     const rating = Number(body.rating);
     if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
       res.status(400).json({ error: 'rating must be integer 1-5', code: 'bad_request' });
       return;
     }
+    const reasons = Array.isArray(body.reasons)
+      ? body.reasons.filter((r): r is string => typeof r === 'string' && r.trim().length > 0).slice(0, 10)
+      : undefined;
     const ok = store.setFeedback(req.params.id, {
       rating,
       reason: typeof body.reason === 'string' ? body.reason.slice(0, 500) : undefined,
+      reasons,
     });
     if (!ok) {
       res.status(404).json({ error: 'trace not found', code: 'not_found' });

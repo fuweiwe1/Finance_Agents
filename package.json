@@ -22,7 +22,8 @@
     "test:watch": "npm run test:watch -w server",
     "demo": "npm run demo -w server",
     "eval:agent": "npm run eval:agent -w server",
-    "eval:summary": "npm run eval:summary -w server"
+    "eval:summary": "npm run eval:summary -w server",
+    "export:badcases": "npm run export:badcases -w server"
   },
   "devDependencies": {
     "@eslint/js": "^9.0.0",
