@@ -18,19 +18,19 @@ export function ChartTab({ symbol }: { symbol: string }) {
   useEffect(() => {
     if (!containerRef.current) return;
     const chart = createChart(containerRef.current, {
-      layout: { background: { type: ColorType.Solid, color: '#ffffff' }, textColor: '#64748b' },
-      grid: { vertLines: { color: '#f1f5f9' }, horzLines: { color: '#f1f5f9' } },
+      layout: { background: { type: ColorType.Solid, color: '#ffffff' }, textColor: '#5f5a52' },
+      grid: { vertLines: { color: '#f1ede7' }, horzLines: { color: '#f1ede7' } },
       width: containerRef.current.clientWidth,
       height: 380,
-      timeScale: { borderColor: '#e2e8f0' },
-      rightPriceScale: { borderColor: '#e2e8f0' },
+      timeScale: { borderColor: '#d9d3c7' },
+      rightPriceScale: { borderColor: '#d9d3c7' },
     });
     const series = chart.addSeries(CandlestickSeries, {
-      upColor: '#dc2626',
-      downColor: '#059669',
+      upColor: '#c14f35',
+      downColor: '#3d7a59',
       borderVisible: false,
-      wickUpColor: '#dc2626',
-      wickDownColor: '#059669',
+      wickUpColor: '#c14f35',
+      wickDownColor: '#3d7a59',
     });
     chartRef.current = chart;
     seriesRef.current = series;
@@ -60,13 +60,13 @@ export function ChartTab({ symbol }: { symbol: string }) {
   }, [kline]);
 
   return (
-    <div className="rounded-xl bg-white p-4 shadow-sm ring-1 ring-slate-100">
+    <div className="card p-4">
       <div className="mb-2 flex items-center justify-between">
-        <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500">Chart · 日K</h3>
-        <span className="text-xs text-slate-400">{symbol}</span>
+        <h3 className="eyebrow">Chart · 日K</h3>
+        <span className="text-xs text-ink-faint">{symbol}</span>
       </div>
       <div ref={containerRef} />
-      {!kline && <p className="py-6 text-center text-sm text-slate-400">加载 K 线中…</p>}
+      {!kline && <p className="py-6 text-center text-sm text-ink-faint">加载 K 线中…</p>}
     </div>
   );
 }

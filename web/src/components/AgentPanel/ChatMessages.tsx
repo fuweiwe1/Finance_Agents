@@ -17,11 +17,11 @@ export function ChatMessages() {
   if (!messages.length && !tools.length) {
     return (
       <div className="flex-1 overflow-y-auto px-3 py-2">
-        <div className="mt-10 text-center text-sm text-slate-400">
+        <div className="mt-10 text-center text-sm text-ink-faint">
           向股票 Agent 提问，如 “TSLA 现在多少钱？” “它的 PE 是多少？”
         </div>
         {error && (
-          <div className="mx-auto mt-4 max-w-sm rounded-md bg-red-50 px-3 py-2 text-center text-xs text-red-600">
+          <div className="mx-auto mt-4 max-w-sm rounded-md bg-up-soft px-3 py-2 text-center text-xs text-up">
             {error}
           </div>
         )}
@@ -32,13 +32,13 @@ export function ChatMessages() {
   return (
     <div className="flex-1 overflow-y-auto px-3 py-2">
       {tools.map((t, i) => (
-        <div key={i} className="my-1 flex flex-wrap items-center gap-1.5 rounded-md bg-slate-50 px-2 py-1 text-xs text-slate-500">
+        <div key={i} className="my-1 flex flex-wrap items-center gap-1.5 rounded-md bg-surface-soft px-2 py-1 text-xs text-ink-soft">
           <span className={t.status === 'running' ? 'animate-pulse' : ''}>🔧</span>
-          <span className="font-mono font-medium text-slate-700">{t.toolName}</span>
-          {t.args ? <span className="font-mono text-slate-400">{JSON.stringify(t.args)}</span> : null}
+          <span className="font-mono font-medium text-ink">{t.toolName}</span>
+          {t.args ? <span className="font-mono text-ink-faint">{JSON.stringify(t.args)}</span> : null}
           <span
             className={
-              t.status === 'error' ? 'text-red-500' : t.status === 'done' ? 'text-emerald-600' : 'text-amber-600'
+              t.status === 'error' ? 'text-up' : t.status === 'done' ? 'text-down' : 'text-pre'
             }
           >
             {t.status === 'running' ? '执行中…' : t.status === 'done' ? '完成' : '失败'}
@@ -50,25 +50,25 @@ export function ChatMessages() {
         <div key={i} className={`mb-2 flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
           <div
             className={`max-w-[85%] whitespace-pre-wrap rounded-xl px-3 py-2 text-sm ${
-              m.role === 'user' ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-800'
+              m.role === 'user' ? 'bg-accent text-white' : 'bg-surface-soft text-ink'
             }`}
           >
             {m.content}
             {m.role === 'assistant' && m.pending && (
-              <span className="ml-0.5 inline-block h-3.5 w-0.5 animate-pulse bg-slate-400 align-middle" />
+              <span className="ml-0.5 inline-block h-3.5 w-0.5 animate-pulse bg-ink-faint align-middle" />
             )}
           </div>
         </div>
       ))}
 
       {usage && (usage.input != null || usage.output != null) && (
-        <div className="mb-2 text-right text-[10px] text-slate-300">
+        <div className="mb-2 text-right text-[10px] text-ink-faint/70">
           本轮 {usage.input ?? '?'} in / {usage.output ?? '?'} out
           {usage.cost != null ? ` · $${usage.cost.toFixed(4)}` : ''}
         </div>
       )}
 
-      {error && <div className="my-2 rounded-md bg-red-50 px-3 py-2 text-xs text-red-600">{error}</div>}
+      {error && <div className="my-2 rounded-md bg-up-soft px-3 py-2 text-xs text-up">{error}</div>}
     </div>
   );
 }

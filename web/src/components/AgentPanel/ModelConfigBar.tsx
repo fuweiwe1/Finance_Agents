@@ -43,16 +43,16 @@ export function ModelConfigBar() {
   };
 
   return (
-    <div className="shrink-0 border-b border-slate-200 p-2">
+    <div className="shrink-0 border-b border-line p-2">
       {!open ? (
         <button
           onClick={openEditor}
-          className="flex w-full items-center justify-between gap-2 rounded-lg bg-slate-50 px-3 py-2 text-xs transition-colors hover:bg-slate-100"
+          className="flex w-full items-center justify-between gap-2 rounded-lg bg-surface-soft px-3 py-2 text-xs transition-colors duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-line/60"
         >
-          <span className="truncate font-medium text-slate-700">{cfg?.model ? `🤖 ${cfg.model}` : '🤖 配置模型 API'}</span>
+          <span className="truncate font-medium text-ink-soft">{cfg?.model ? `🤖 ${cfg.model}` : '🤖 配置模型 API'}</span>
           <span
-            className={`shrink-0 rounded-full px-2 py-0.5 ${
-              cfg?.hasKey ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'
+            className={`chip ${
+              cfg?.hasKey ? 'bg-status-soft text-status' : 'bg-pre-soft text-pre'
             }`}
           >
             {cfg?.hasKey ? '已配置' : '未配置'}
@@ -65,8 +65,8 @@ export function ModelConfigBar() {
               <button
                 key={p}
                 onClick={() => setProvider(p)}
-                className={`flex-1 rounded px-2 py-1 text-xs ${
-                  provider === p ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-600'
+                className={`flex-1 rounded px-2 py-1 text-xs transition-colors duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] ${
+                  provider === p ? 'bg-accent text-white' : 'bg-surface-soft text-ink-soft hover:bg-line/60'
                 }`}
               >
                 {p === 'custom-openai' ? 'OpenAI 兼容' : 'OpenAI 官方'}
@@ -77,33 +77,33 @@ export function ModelConfigBar() {
             value={baseUrl}
             onChange={(e) => setBaseUrl(e.target.value)}
             placeholder="baseURL（如 https://api.openai.com/v1 或 Ollama/vLLM 中转）"
-            className="w-full rounded border border-slate-200 px-2 py-1 text-xs outline-none focus:border-blue-400"
+            className="input-sm w-full"
           />
           <input
             value={model}
             onChange={(e) => setModel(e.target.value)}
             placeholder="model（如 gpt-4o-mini）"
-            className="w-full rounded border border-slate-200 px-2 py-1 text-xs outline-none focus:border-blue-400"
+            className="input-sm w-full"
           />
           <input
             value={apiKey}
             onChange={(e) => setApiKey(e.target.value)}
             type="password"
             placeholder="API key（仅存后端内存）"
-            className="w-full rounded border border-slate-200 px-2 py-1 text-xs outline-none focus:border-blue-400"
+            className="input-sm w-full"
           />
-          {msg && <p className="text-[11px] text-red-500">{msg}</p>}
+          {msg && <p className="text-[11px] text-up">{msg}</p>}
           <div className="flex gap-1">
             <button
               onClick={() => void save()}
               disabled={saving}
-              className="flex-1 rounded bg-blue-600 px-2 py-1 text-xs font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+              className="flex-1 rounded-lg bg-accent px-2 py-1 text-xs font-medium text-white transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-accent-hover active:scale-[0.98] disabled:opacity-50"
             >
               {saving ? '保存中…' : '保存'}
             </button>
             <button
               onClick={() => setOpen(false)}
-              className="rounded bg-slate-100 px-2 py-1 text-xs text-slate-600 hover:bg-slate-200"
+              className="btn-ghost flex-1"
             >
               取消
             </button>

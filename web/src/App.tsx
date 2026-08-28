@@ -63,8 +63,9 @@ export default function App() {
   );
 
   return (
-    <div className="flex h-screen w-screen overflow-hidden bg-slate-100 text-slate-900">
-      <aside className="flex h-full w-64 shrink-0 flex-col border-r border-slate-200 bg-white">
+    <div className="flex h-screen w-screen overflow-hidden bg-canvas text-ink">
+      <div className="grain" aria-hidden="true" />
+      <aside className="flex h-full w-64 shrink-0 flex-col border-r border-line bg-surface">
         <Sidebar
           agentPanelOpen={agentPanelOpen}
           onToggleAgent={() => setAgentPanelOpen((v) => !v)}
@@ -83,9 +84,9 @@ export default function App() {
             data-testid="panel-resize-handle"
             onMouseDown={startResize}
             title="拖拽调整宽度"
-            className="w-1 shrink-0 cursor-col-resize bg-slate-200 transition-colors hover:bg-blue-400 active:bg-blue-500"
+            className="w-1 shrink-0 cursor-col-resize bg-line transition-colors duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-accent/70 active:bg-accent"
           />
-          <section className="h-full shrink-0 overflow-hidden border-l border-slate-200" style={{ width: agentPanelWidth }}>
+          <section className="h-full shrink-0 overflow-hidden border-l border-line" style={{ width: agentPanelWidth }}>
             <AgentPanel />
           </section>
         </>

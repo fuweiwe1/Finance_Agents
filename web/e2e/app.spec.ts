@@ -36,7 +36,7 @@ test.describe('股票 Agent 工作台 E2E（A 股）', () => {
     // 发消息：未配置模型 → 出现引导提示
     await page.getByPlaceholder('输入问题，Enter 发送').fill('贵州茅台现在多少钱');
     await page.getByRole('button', { name: '发送' }).click();
-    await expect(page.getByText(/配置模型 API/)).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByText(/请先在右上角配置模型 API/)).toBeVisible({ timeout: 10_000 });
   });
 
   test('Agent 面板可拖拽伸缩，中部随动不溢出', async ({ page }) => {

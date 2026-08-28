@@ -16,17 +16,17 @@ export function MarketHeader({ symbol }: { symbol: string }) {
     : null;
 
   return (
-    <div className="mb-3 rounded-xl bg-white p-4 shadow-sm ring-1 ring-slate-100">
+    <div className="card mb-3 p-5">
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0">
           <div className="flex items-baseline gap-2">
             {q ? (
-              <h1 className="truncate text-xl font-semibold text-slate-900">{q.name}</h1>
+              <h1 className="truncate text-xl font-semibold text-ink">{q.name}</h1>
             ) : (
               <Skeleton className="h-6 w-44" />
             )}
             {q ? (
-              <span className="shrink-0 rounded bg-slate-100 px-1.5 py-0.5 text-xs text-slate-500">
+              <span className="shrink-0 rounded-md bg-surface-soft px-1.5 py-0.5 text-xs text-ink-soft">
                 {q.symbol}
                 {exchangeLabel(q.code) ? ` · ${exchangeLabel(q.code)}` : ''}
               </span>
@@ -37,7 +37,7 @@ export function MarketHeader({ symbol }: { symbol: string }) {
           <div className="mt-1 flex flex-wrap items-baseline gap-x-3 gap-y-1">
             {q ? (
               <>
-                <span className={`text-4xl font-bold tabular-nums ${trendColor(q.changePct)}`}>{fmtPrice(q.price)}</span>
+                <span className={`font-display text-5xl font-semibold leading-tight tabular-nums ${trendColor(q.changePct)}`}>{fmtPrice(q.price)}</span>
                 <span className={`text-lg font-medium tabular-nums ${trendColor(q.changePct)}`}>
                   {q.change > 0 ? '+' : ''}
                   {fmtPrice(q.change)} ({fmtPct(q.changePct)})
@@ -51,12 +51,12 @@ export function MarketHeader({ symbol }: { symbol: string }) {
         <div className="shrink-0 text-right">
           {q ? (
             <span
-              className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ${
+              className={`chip ${
                 q.session === 'regular'
-                  ? 'bg-emerald-100 text-emerald-700'
+                  ? 'bg-status-soft text-status'
                   : q.session === 'pre'
-                    ? 'bg-amber-100 text-amber-700'
-                    : 'bg-slate-100 text-slate-600'
+                    ? 'bg-pre-soft text-pre'
+                    : 'bg-surface-soft text-ink-soft'
               }`}
             >
               {SESSION_LABEL[q.session] ?? q.session}
@@ -64,15 +64,15 @@ export function MarketHeader({ symbol }: { symbol: string }) {
           ) : (
             <Skeleton className="ml-auto h-6 w-24" />
           )}
-          <div className="mt-2 text-xs text-slate-400">{q ? `币种 ${q.currency}` : ''}</div>
+          <div className="mt-2 text-xs text-ink-faint">{q ? `币种 ${q.currency}` : ''}</div>
         </div>
       </div>
-      <div className="mt-3 flex flex-wrap gap-x-6 gap-y-1.5 border-t border-slate-100 pt-3">
+      <div className="mt-3 flex flex-wrap gap-x-6 gap-y-1.5 border-t border-line pt-3">
         {metrics
           ? metrics.map((m) => (
               <div key={m.label} className="flex items-baseline gap-1.5">
-                <span className="text-xs uppercase tracking-wide text-slate-400">{m.label}</span>
-                <span className="text-sm font-medium tabular-nums text-slate-700">{m.value}</span>
+                <span className="text-[11px] uppercase tracking-wide text-ink-faint">{m.label}</span>
+                <span className="text-sm font-medium tabular-nums text-ink">{m.value}</span>
               </div>
             ))
           : [0, 1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-4 w-20" />)}

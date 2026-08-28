@@ -38,8 +38,8 @@ export function WatchlistSection() {
   };
 
   return (
-    <section className="flex-1 overflow-y-auto border-b border-slate-200 p-3">
-      <h2 className="mb-2 text-xs font-semibold uppercase tracking-wider text-slate-500">WATCHLIST</h2>
+    <section className="flex-1 overflow-y-auto border-b border-line p-3">
+      <h2 className="eyebrow mb-2">WATCHLIST</h2>
       <div className="mb-2 flex gap-1">
         <input
           value={q}
@@ -48,18 +48,18 @@ export function WatchlistSection() {
             if (e.key === 'Enter') void add();
           }}
           placeholder="输入股票代码"
-          className="w-full rounded-md border border-slate-200 px-2 py-1 text-sm outline-none focus:border-blue-400"
+          className="input-sm w-full"
         />
         <button
           onClick={() => void add()}
           disabled={adding}
           title="添加到自选"
-          className="shrink-0 rounded-md bg-blue-600 px-2 py-1 text-sm font-medium text-white transition-colors hover:bg-blue-700 disabled:opacity-50"
+          className="btn-primary shrink-0"
         >
           ＋
         </button>
       </div>
-      {error && <p className="mb-1 text-xs text-red-500">{error}</p>}
+      {error && <p className="mb-1 text-xs text-up">{error}</p>}
       <ul className="space-y-0.5">
         {watchlist.map((sym) => (
           <WatchlistRow
@@ -71,7 +71,7 @@ export function WatchlistSection() {
             onRemove={() => void removeFromWatchlist(sym)}
           />
         ))}
-        {!watchlist.length && <li className="py-3 text-center text-xs text-slate-400">暂无自选，搜索添加</li>}
+        {!watchlist.length && <li className="py-3 text-center text-xs text-ink-faint">暂无自选，搜索添加</li>}
       </ul>
     </section>
   );
@@ -93,17 +93,17 @@ function WatchlistRow({
   return (
     <li
       onClick={onSelect}
-      className={`group flex cursor-pointer items-center justify-between rounded-md px-2 py-1.5 ${
-        active ? 'bg-blue-50' : 'hover:bg-slate-100'
+      className={`group flex cursor-pointer items-center justify-between rounded-md px-2 py-1.5 transition-colors duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] ${
+        active ? 'bg-accent-soft' : 'hover:bg-surface-soft'
       }`}
     >
       <div className="min-w-0">
-        <div className="text-sm font-medium text-slate-800">{symbol}</div>
-        <div className="truncate text-xs text-slate-400">{quote?.name ?? '—'}</div>
+        <div className="text-sm font-medium text-ink">{symbol}</div>
+        <div className="truncate text-xs text-ink-faint">{quote?.name ?? '—'}</div>
       </div>
       <div className="ml-2 flex items-center gap-1.5 text-right">
         <div>
-          <div className="text-sm tabular-nums text-slate-700">{fmtPrice(quote?.price)}</div>
+          <div className="text-sm tabular-nums text-ink-soft">{fmtPrice(quote?.price)}</div>
           <div className={`text-xs tabular-nums ${trendColor(quote?.changePct)}`}>{fmtPct(quote?.changePct)}</div>
         </div>
         <button
@@ -112,7 +112,7 @@ function WatchlistRow({
             e.stopPropagation();
             onRemove();
           }}
-          className="rounded p-0.5 text-slate-300 opacity-0 transition-opacity hover:bg-blue-100 hover:text-blue-600 group-hover:opacity-100"
+          className="rounded p-0.5 text-line-strong opacity-0 transition-opacity hover:bg-surface-soft hover:text-up group-hover:opacity-100"
         >
           ✕
         </button>

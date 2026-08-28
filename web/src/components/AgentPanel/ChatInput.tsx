@@ -19,7 +19,7 @@ export function ChatInput() {
   };
 
   return (
-    <div className="shrink-0 border-t border-slate-200 p-2">
+    <div className="shrink-0 border-t border-line p-2">
       <div className="flex gap-1.5">
         <input
           value={text}
@@ -31,17 +31,17 @@ export function ChatInput() {
             }
           }}
           placeholder="输入问题，Enter 发送"
-          className="flex-1 rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-blue-400"
+          className="input flex-1"
         />
         <button
           onClick={() => void submit()}
           disabled={streaming || !text.trim()}
-          className="rounded-lg bg-blue-600 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700 disabled:opacity-40"
+          className="btn-primary shrink-0"
         >
           {streaming ? '…' : '发送'}
         </button>
       </div>
-      <p className="mt-1 truncate text-[10px] text-slate-400">
+      <p className="mt-1 truncate text-[10px] text-ink-faint">
         当前上下文：{selected}
         {quote?.price ? ` · ${quote.price}` : ''} ｜ 模型按右上角配置的 API 调用
       </p>

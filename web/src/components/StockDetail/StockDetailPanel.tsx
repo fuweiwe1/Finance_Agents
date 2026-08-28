@@ -27,7 +27,7 @@ export function StockDetailPanel() {
       {tab === 'financials' && <FinancialsTab symbol={selected} />}
       {tab === 'news' && <NewsTab symbol={selected} />}
 
-      <p className="mt-4 text-center text-[11px] text-slate-400">
+      <p className="mt-4 text-center text-[11px] text-ink-faint">
         ⚠️ 数据来自第三方免费接口，仅供演示，不构成投资建议。
       </p>
     </div>

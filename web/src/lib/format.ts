@@ -90,6 +90,6 @@ export const SESSION_LABEL: Record<string, string> = {
 
 /** 涨跌颜色：涨红跌绿（A股习惯） */
 export function trendColor(n?: number | null): string {
-  if (n === undefined || n === null || !Number.isFinite(n) || n === 0) return 'text-slate-600';
-  return n > 0 ? 'text-red-600' : 'text-emerald-600';
+  if (n === undefined || n === null || !Number.isFinite(n) || n === 0) return 'text-ink-soft';
+  return n > 0 ? 'text-up' : 'text-down';
 }

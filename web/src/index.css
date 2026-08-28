@@ -1,1 +1,91 @@
 @import "tailwindcss";
+
+@theme {
+  /* ── 高端柔和 · 暖色设计 token ── */
+  --color-canvas: #f6f4f0; /* 应用画布 */
+  --color-surface: #ffffff; /* 卡片面 */
+  --color-surface-soft: #f1ede7; /* 次级面 / hover */
+  --color-ink: #23201b; /* 主文字 暖近黑 */
+  --color-ink-soft: #5f5a52; /* 次文字 暖灰 */
+  --color-ink-faint: #9a9386; /* 弱文字 灰棕 */
+  --color-line: #eae5dc; /* 发丝分割线 */
+  --color-line-strong: #d9d3c7; /* 强调分割线 */
+
+  --color-accent: #1f1c19; /* 主操作 深咖啡黑 */
+  --color-accent-hover: #37322b; /* 主操作 hover */
+  --color-accent-soft: #efece7; /* 主色浅底 */
+
+  --color-up: #c14f35; /* 涨（A 股红） */
+  --color-up-soft: #f8e9e3; /* 涨浅底 */
+  --color-down: #3d7a59; /* 跌（A 股绿） */
+  --color-down-soft: #e6efe8; /* 跌浅底 */
+
+  --color-status: #3d7a59; /* 常规时段 */
+  --color-status-soft: #e6efe8;
+  --color-pre: #a97d3f; /* 盘前琥珀 */
+  --color-pre-soft: #f5ead7;
+
+  --font-sans: "Plus Jakarta Sans", "Segoe UI Variable Display", "Segoe UI", system-ui,
+    "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei UI", "Microsoft YaHei", sans-serif;
+  --font-display: "Playfair Display", Georgia, "Noto Serif SC", "Songti SC", "SimSun", serif;
+}
+
+@layer base {
+  html {
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  body {
+    font-family: var(--font-sans);
+    color: var(--color-ink);
+    background-color: var(--color-canvas);
+  }
+}
+
+@layer components {
+  /* 软质感卡片：内顶高光 + 暖色环境阴影 */
+  .card {
+    @apply rounded-2xl bg-white;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.9),
+      0 1px 2px rgba(35, 32, 27, 0.05),
+      0 20px 48px -24px rgba(35, 32, 27, 0.18);
+  }
+  /* 大写 eyebrow 标签 */
+  .eyebrow {
+    @apply text-[11px] font-semibold uppercase tracking-[0.14em] text-ink-faint;
+  }
+  /* 主操作按钮：深咖啡黑 */
+  .btn-primary {
+    @apply rounded-lg bg-accent px-3 py-2 text-sm font-medium text-white transition-all duration-300 hover:bg-accent-hover active:scale-[0.98];
+    transition-timing-function: cubic-bezier(0.32, 0.72, 0, 1);
+  }
+  .btn-primary:disabled {
+    @apply cursor-not-allowed opacity-40;
+  }
+  /* 次级按钮 */
+  .btn-ghost {
+    @apply rounded-lg bg-surface-soft px-2 py-1 text-xs text-ink-soft transition-all duration-300 hover:bg-line/60 active:scale-[0.98];
+    transition-timing-function: cubic-bezier(0.32, 0.72, 0, 1);
+  }
+  /* 文本输入 */
+  .input {
+    @apply rounded-lg border border-line bg-white px-3 py-2 text-sm text-ink outline-none transition-all duration-300 placeholder:text-ink-faint/70 focus:border-line-strong focus:ring-2 focus:ring-accent/10;
+  }
+  .input-sm {
+    @apply rounded-md border border-line bg-white px-2 py-1 text-xs text-ink outline-none transition-all duration-300 placeholder:text-ink-faint/70 focus:border-line-strong focus:ring-2 focus:ring-accent/10;
+  }
+  /* 状态 chip */
+  .chip {
+    @apply inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium;
+  }
+  /* 极淡纸张噪点 */
+  .grain {
+    position: fixed;
+    inset: 0;
+    z-index: 40;
+    pointer-events: none;
+    opacity: 0.016;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+}

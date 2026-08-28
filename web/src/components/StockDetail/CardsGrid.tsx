@@ -5,16 +5,16 @@ import { fmtCapCn, fmtPct, fmtPrice, fmtShares, fmtVolumeCn, trendColor } from '
 function KV({ label, value, className = '' }: { label: string; value: ReactNode; className?: string }) {
   return (
     <div className="flex items-center justify-between py-1">
-      <span className="text-xs uppercase tracking-wide text-slate-400">{label}</span>
-      <span className={`text-sm font-medium tabular-nums text-slate-800 ${className}`}>{value}</span>
+      <span className="text-[11px] uppercase tracking-wide text-ink-faint">{label}</span>
+      <span className={`text-sm font-medium tabular-nums text-ink ${className}`}>{value}</span>
     </div>
   );
 }
 
 function Card({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <div className="rounded-xl bg-white p-4 shadow-sm ring-1 ring-slate-100">
-      <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-slate-500">{title}</h3>
+    <div className="card p-4">
+      <h3 className="eyebrow mb-2">{title}</h3>
       {children}
     </div>
   );
