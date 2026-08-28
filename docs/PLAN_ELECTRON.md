@@ -133,3 +133,42 @@
 3. 数据（自选/会话/模型 key/trace）落在 userData，**重启/移除项目目录后仍正常**
 4. ✕ 隐藏到托盘、托盘显示/退出、单实例、更新检查 v1 可用
 5. 三层测试 + 打包冒烟全绿；浏览器 dev 通道保留
+---
+
+## 桌面版发布流程（自动更新）
+
+自动更新原理：桌面版启动时，用打包产物的 `app-update.yml` 去 **GitHub Releases** 查最新版本；发现新版即提示下载、重启生效。所以「发布」= 把新安装包 + `latest.yml` 传到语义化版本的 GitHub Release。
+
+### 一次性前置（配凭证）
+
+1. GitHub → Settings → Developer settings → Personal access tokens → Tokens (classic) → Generate new token
+   - **Note**：随便填标识名（如 `finance-agents 桌面发布`）
+   - **Expiration**：建议 90 天或 No expiration
+   - **Scopes**：勾 **`repo`**（唯一必需）
+2. 仓库 → Settings → Secrets and variables → Actions → New repository secret：
+   - Name：`GH_TOKEN`，Value：刚才的 `ghp_...`
+
+### 发版循环（3 步）
+
+```bash
+# 1. 改版本号：electron/package.json 的 "version"（tag 需与之一致）
+# 2. 提交推送
+git add -A && git commit -m "feat: ..." && git push
+# 3. 打 tag 触发自动发布
+git tag vX.Y.Z && git push origin vX.Y.Z
+```
+
+- `v*` tag 触发 `.github/workflows/release-desktop.yml`：装依赖 → 构建 web 渲染层 → electron-vite → `electron-builder --win --publish always`
+- 自动创建/更新该 tag 的 GitHub Release，上传 `Setup.exe` + `portable.exe` + `latest.yml` + `blockmap`（老用户据此更新）
+
+### 本地手动发布（备用）
+
+```bash
+cd electron
+GH_TOKEN=ghp_xxx npx electron-builder --win --publish always
+```
+
+### 验证
+
+1. GitHub Releases 页出现带资产的 `vX.Y.Z`
+2. 已装应用的电脑启动 → 日志/托盘出现「发现新版本」→ 更新 → 重启生效

@@ -1,0 +1,40 @@
+name: 桌面版自动更新发布
+
+on:
+  push:
+    tags:
+      - 'v*'          # 打 v0.1.1 这类 tag 即触发发布
+  workflow_dispatch: {} # 也可手动触发（不带 tag 时发布到最新/无需严格匹配）
+
+permissions:
+  contents: write     # 需要创建 GitHub Release
+
+jobs:
+  build-and-publish:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      # 项目 .npmrc 默认 npmmirror + 绕代理；CI 机器不在此限制内，用官方 registry 更快更稳
+      - name: 安装依赖
+        run: npm ci
+        env:
+          npm_config_registry: https://registry.npmjs.org/
+
+      # 构建 web 渲染层(→web/dist) → 拷到 electron/renderer → electron-vite build(main+preload)
+      - name: 构建渲染层 + 主进程
+        run: node scripts/prepare-desktop-test.mjs
+
+      # 打包 NSIS+portable 并发布：electron-builder 自动创建/更新 tag 对应的 GitHub Release，
+      # 上传 Setup.exe / portable.exe / latest.yml / blockmap —— 桌面版 electron-updater 据此更新。
+      - name: 打包并发布（electron-builder --publish always）
+        working-directory: electron
+        env:
+          # 仓库 → Settings → Secrets and variables → Actions → New repository secret → GH_TOKEN(带 repo 权限的 PAT)
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+        run: npx electron-builder --win --publish always
