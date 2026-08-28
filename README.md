@@ -23,9 +23,6 @@
 <!-- 重新录制后放到 docs/screenshots/demo.gif，把下面这行取消注释替换即可：
 -->
 
-> 📸 待补：桌面版演示 GIF（打开 → 行情跳动 → 点自选 → 切 K 线 → Agent 流式回答 → Traces 瀑布）。
-> 也可补静态稿到 `docs/screenshots/`：`overview.png`（主界面）、`traces.png`（观测面板）。
-
 ---
 
 ## ✨ 功能特性

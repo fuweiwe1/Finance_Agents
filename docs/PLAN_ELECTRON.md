@@ -161,6 +161,47 @@ git tag vX.Y.Z && git push origin vX.Y.Z
 - `v*` tag 触发 `.github/workflows/release-desktop.yml`：装依赖 → 构建 web 渲染层 → electron-vite → `electron-builder --win --publish always`
 - 自动创建/更新该 tag 的 GitHub Release，上传 `Setup.exe` + `portable.exe` + `latest.yml` + `blockmap`（老用户据此更新）
 
+### 每次发版标准流程（详细，照着走）
+
+**第 0 步 · 前置（只做一次）**
+`GH_TOKEN` secret 已按上文配好；之后每次发版无需再动。
+
+**第 1 步 · 改版本号**
+- **关键**：改 `electron/package.json` 的 `"version"` —— 产物文件名（`Finance Agents-X.Y.Z-Setup-x64.exe`）、`latest.yml`、以及用户机器 electron-updater 的升级比对都读它。
+- **同步**：`package.json`（根）/ `server/package.json` / `web/package.json` 的 `version` 改成同一数字，保持一致。
+- 版本策略：小修 `0.1.x`，功能迭代 `0.2.0`。
+- **关键规则：tag 必须与版本对齐**（版本 `X.Y.Z` → tag `vX.Y.Z`），否则发布会建到旧 tag 或升级检测不到。
+
+**第 2 步 · 提交并推送代码**
+```powershell
+git add -A
+git commit -m "chore: bump version to X.Y.Z"
+git push
+```
+> ⚠️ **必须先推代码再推 tag**。tag 指向某个 commit，漏推代码 → tag 指向旧提交 → 编译产物还是旧版本。
+
+**第 3 步 · 打 tag 触发自动发布**
+```powershell
+git tag vX.Y.Z
+git push origin vX.Y.Z
+```
+推送 tag 瞬间 GitHub Actions 自动跑（3-8 分钟，无需干预）：
+`npm ci` → 构建 web 渲染层 + 主进程 → `electron-builder --win --publish always` → 自动创建 Release `vX.Y.Z` 并传 4 个产物。
+
+**第 4 步 · 验证**
+1. Actions 工作流绿色 ✔
+2. GitHub Releases 页：`vX.Y.Z` 下 `Setup.exe` / `portable.exe` / `latest.yml` / `blockmap` 齐全
+3. 老版本应用启动 → 检测到 `latest.yml` 版本更高 → 提示更新 → 重启生效
+
+**第 5 步 · 出问题怎么办**
+- 工作流失败：看 Actions 日志 → 修代码推新 commit → 删旧 tag 重打（或直接打补丁版）：
+  ```powershell
+  git tag -d vX.Y.Z
+  git push origin :vX.Y.Z
+  ```
+- Release 建了但产物不全：不用动代码 → Actions 该次运行 → **Re-run jobs**。
+- 被打草稿/需隐藏：GitHub Releases 页直接编辑删除草稿。
+
 ### 本地手动发布（备用）
 
 ```bash
