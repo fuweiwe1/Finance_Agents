@@ -1,4 +1,9 @@
+import { electronApi, isElectron, type ElectronApi } from './bridge';
+
 const BASE = '/api';
+
+/** 双传输：Electron 渲染进程走 window.api(IPC)；浏览器 dev 走 fetch + Express */
+const ipc: ElectronApi | null = isElectron() ? electronApi() : null;
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`${BASE}${path}`, {
@@ -22,45 +27,62 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 }
 
 export const api = {
-  quote: (symbol: string) => request<MarketQuote>(`/market/quote?symbol=${encodeURIComponent(symbol)}`),
+  quote: (symbol: string) =>
+    ipc ? ipc.market.quote(symbol) : request<MarketQuote>(`/market/quote?symbol=${encodeURIComponent(symbol)}`),
   quotes: (symbols: string[]) =>
-    request<MarketQuote[]>(`/market/quotes?symbols=${encodeURIComponent(symbols.join(','))}`),
-  financials: (symbol: string) => request<Financials>(`/market/financials?symbol=${encodeURIComponent(symbol)}`),
+    ipc ? ipc.market.quotes(symbols) : request<MarketQuote[]>(`/market/quotes?symbols=${encodeURIComponent(symbols.join(','))}`),
+  financials: (symbol: string) =>
+    ipc ? ipc.market.financials(symbol) : request<Financials>(`/market/financials?symbol=${encodeURIComponent(symbol)}`),
   news: (symbol: string, limit = 10) =>
-    request<NewsItem[]>(`/market/news?symbol=${encodeURIComponent(symbol)}&limit=${limit}`),
+    ipc
+      ? ipc.market.news(symbol, limit)
+      : request<NewsItem[]>(`/market/news?symbol=${encodeURIComponent(symbol)}&limit=${limit}`),
   kline: (symbol: string, count = 120) =>
-    request<KlineBar[]>(`/market/kline?symbol=${encodeURIComponent(symbol)}&interval=day&count=${count}`),
-  search: (q: string) => request<SearchResult>(`/market/search?q=${encodeURIComponent(q)}`),
+    ipc
+      ? ipc.market.kline(symbol, count)
+      : request<KlineBar[]>(`/market/kline?symbol=${encodeURIComponent(symbol)}&interval=day&count=${count}`),
+  search: (q: string) => (ipc ? ipc.market.search(q) : request<SearchResult>(`/market/search?q=${encodeURIComponent(q)}`)),
 
   watchlist: {
-    list: () => request<string[]>('/watchlist'),
-    add: (symbol: string) => request<string[]>('/watchlist', { method: 'POST', body: JSON.stringify({ symbol }) }),
-    remove: (symbol: string) => request<string[]>(`/watchlist/${encodeURIComponent(symbol)}`, { method: 'DELETE' }),
+    list: () => (ipc ? ipc.watchlist.list() : request<string[]>('/watchlist')),
+    add: (symbol: string) =>
+      ipc
+        ? ipc.watchlist.add(symbol)
+        : request<string[]>('/watchlist', { method: 'POST', body: JSON.stringify({ symbol }) }),
+    remove: (symbol: string) =>
+      ipc
+        ? ipc.watchlist.remove(symbol)
+        : request<string[]>(`/watchlist/${encodeURIComponent(symbol)}`, { method: 'DELETE' }),
   },
 
   modelConfig: {
-    get: () => request<ModelConfigInfo>('/agent/model-config'),
+    get: () => (ipc ? ipc.modelConfig.get() : request<ModelConfigInfo>('/agent/model-config')),
     save: (cfg: ModelConfigInput) =>
-      request<{ ok: boolean }>('/agent/model-config', { method: 'POST', body: JSON.stringify(cfg) }),
+      ipc
+        ? ipc.modelConfig.save(cfg as unknown as Record<string, unknown>)
+        : request<{ ok: boolean }>('/agent/model-config', { method: 'POST', body: JSON.stringify(cfg) }),
   },
 
   sessions: {
-    list: () => request<SessionMeta[]>('/agent/sessions'),
-    create: () => request<SessionMeta>('/agent/sessions', { method: 'POST' }),
-    remove: (id: string) => request<{ ok: boolean }>(`/agent/sessions/${id}`, { method: 'DELETE' }),
+    list: () => (ipc ? ipc.sessions.list() : request<SessionMeta[]>('/agent/sessions')),
+    create: () => (ipc ? ipc.sessions.create() : request<SessionMeta>('/agent/sessions', { method: 'POST' })),
+    remove: (id: string) =>
+      ipc ? ipc.sessions.remove(id) : request<{ ok: boolean }>(`/agent/sessions/${id}`, { method: 'DELETE' }),
   },
 
   chatUrl: (id: string) => `${BASE}/agent/sessions/${id}/chat`,
 
   traces: {
     list: (params?: { sessionId?: string; outcome?: string; limit?: number }) =>
-      request<AgentTrace[]>(`/traces${qs(params)}`),
-    get: (id: string) => request<AgentTrace>(`/traces/${encodeURIComponent(id)}`),
+      ipc ? ipc.traces.list(params) : request<AgentTrace[]>(`/traces${qs(params)}`),
+    get: (id: string) => (ipc ? ipc.traces.get(id) : request<AgentTrace>(`/traces/${encodeURIComponent(id)}`)),
     feedback: (id: string, rating: number, reason?: string, reasons?: string[]) =>
-      request<{ ok: boolean }>(`/traces/${encodeURIComponent(id)}/feedback`, {
-        method: 'POST',
-        body: JSON.stringify({ rating, reason, reasons }),
-      }),
+      ipc
+        ? ipc.traces.feedback(id, rating, reason, reasons)
+        : request<{ ok: boolean }>(`/traces/${encodeURIComponent(id)}/feedback`, {
+            method: 'POST',
+            body: JSON.stringify({ rating, reason, reasons }),
+          }),
   },
 };
 

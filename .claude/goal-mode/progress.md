@@ -77,10 +77,19 @@ updated: 2026-08-15
 | 测试 | `badcases.test.ts`（去重/上限/低分判定/合并）；78 server + 2 web + E2E 4/4 全绿 |
 | 实机闭环 | 真实对话 → 2 分+原因反馈 → export:badcases 导出 → eval 吸收 → 对比回归，全链路跑通 |
 
-### M7-5 迭代闭环已就绪 ✅
-采集 → trace → UI 观测 → 1-5★+原因反馈 → export:badcases 导出 → eval 吸收 → 指标趋势 → 改 prompt/工具 → 对比回归。
+### M8 Electron 桌面端改造（计划：docs/PLAN_ELECTRON.md）
 
-## M0–M6 全部完成 ✅
+| 里程碑 | 状态 | 验收证据 |
+|---|---|---|
+| M8-0 脚手架 + pi-agent 主进程探测 | ✅ done | electron-vite(main+preload)+electron/workspace(vite7 与 web 的 vite8 并存)；`[probe] pi-ai stream in Electron main: OK(12ms)`——最大风险解除；`dev:electron` 打开窗口经 vite 代理拉真实 A股(贵州茅台1294.67)；typecheck/lint 绿、78+2 测试全过；dev 通道(浏览器)不受影响 |
+| M8-1 service 层抽取 | ✅ done | `services.ts` 传输无关组合根(store/traces/market/models/sessions)；`app.ts`/`index.ts` 重构复用 createServices；`services.test.ts` 4 用例(默认组合/注入桩直调业务层/持久化落盘/共享store)；**原 78 项 zero 改动通过**（总 82）|
+| M8-2 IPC 桥 + 双传输 | ✅ done | preload contextBridge 全量 `window.api`(market/watchlist/sessions/modelConfig/traces/agent.chat+onEvent)；主进程 ipcMain 全走 createServices；聊天流改 `webContents.send('agent:event')` 推包；api.ts/useChatStore 双传输(Electron→IPC，浏览器→fetch/SSE)；`chatPackets.test` 协议单测4用例+浏览器 E2E 4/4 不受影响；**实机验证**：`ELECTRON_VERIFY_IPC=1` 渲染进程 window.api 调 quote→IPC→services→真实腾讯(贵州茅台1294.67)，无 HTTP 后端 |
+| M8-3 主进程集成 | ✅ done | 单实例锁(`requestSingleInstanceLock`，实测第二实例正确退出+激活)；托盘常驻(✕隐藏+菜单显示/退出+isQuitting)+图标(PNG 生成脚本)；DATA_DIR 修正(dev→仓库根 server/.data；packaged→userData)；安全(contextIsolation/nodeIntegration:false/sandbox)；verify-ipc 通过(dataDir 正确+真实数据)；CSP 延至 M8-4(避免破坏 vite HMR)；typecheck/lint 绿 |
+| M8-4 打包分发 | ✅ done | **NSIS Setup + portable 双产物(107MB)+latest.yml+blockmap**；**自定义 K 线图标已嵌入 exe**(signtool/winCodeSign 经代理下载成功)；electron-updater 接入；打包冒烟通过(dataDir=%APPDATA%\\Finance Agents、数据落盘、全链路正常)。打包网络排雷：`npmRebuild:false`+镜像基址(registry.npmmirror.com/-/binary/)+`NODE_OPTIONS=--use-system-ca`+加代理(clash 7890)下 winCodeSign |
+| M8-5 测试集落地 + 文档 | ✅ done | **T3 Electron E2E**（Playwright `_electron.launch` 驱动真 Electron，`desktop.spec.ts` 1 用例 1.1s 过：窗口渲染+`window.api` IPC 全链路——真实行情 quote/quotes、会话 CRUD、未配置模型 chat 拒绝路径、traces）；T4 打包冒烟(M8-4 已做)；README 补「🖥 桌面端」；脚本 `test:electron`/`dist:win`/`dev:electron`；**全量回归**：typecheck 0/lint 0/server 82+web 6 + 浏览器 E2E 4/4 + Electron E2E 1/1 |
+
+### M8 Electron 桌面化 全部完成 ✅
+桌面端已可产出带图标的 NSIS 安装包+便携版；IPC 全链路、托盘、单实例、自动更新、userData 持久化就位；三层测试(Electron/浏览器/单测集成)全绿。
 
 ## 后续修复任务 ✅
 - **Agent 面板可拖拽伸缩**：拖拽手柄 + 宽度限幅(300-640) + localStorage 记忆；中部 flex 随动，E2E 拖拽用例通过（面板变宽/中部变窄/无横向溢出）。

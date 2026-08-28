@@ -8,18 +8,22 @@
   },
   "workspaces": [
     "server",
-    "web"
+    "web",
+    "electron"
   ],
   "scripts": {
     "dev": "concurrently -n server,web -c blue,magenta \"npm run dev -w server\" \"npm run dev -w web\"",
     "kill:dev": "node scripts/kill-ports.mjs",
+    "dev:electron": "npm run dev -w electron-shell",
+    "build:electron": "npm run build -w electron-shell",
     "dev:server": "npm run dev -w server",
     "dev:web": "npm run dev -w web",
     "build": "npm run build -w server && npm run build -w web",
-    "typecheck": "npm run typecheck -w server && npm run typecheck -w web",
+    "typecheck": "npm run typecheck -w server && npm run typecheck -w web && npm run typecheck -w electron-shell",
     "lint": "eslint .",
     "test": "npm run test -w server && npm run test -w web",
     "test:e2e": "playwright test",
+    "test:electron": "node scripts/prepare-desktop-test.mjs && npx playwright test --config electron/playwright.config.ts",
     "test:watch": "npm run test:watch -w server",
     "demo": "npm run demo -w server",
     "eval:agent": "npm run eval:agent -w server",

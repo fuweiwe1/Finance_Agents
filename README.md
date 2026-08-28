@@ -101,13 +101,32 @@ npm run dev
 
 ---
 
+## 🖥 桌面端（Electron）
+
+本项目也可打包为 **Windows 桌面应用**（前端 Web 版保留作开发/调试通道；桌面版走本地 IPC，数据存 `%APPDATA%\Finance Agents`）：
+
+```bash
+npm run dev:electron    # 桌面开发模式（起 web dev + Electron 窗口）
+npm run dist:win        # 打包：electron-builder 产出 NSIS 安装包 + portable 便携版（dist/）
+npm run test:electron   # Electron E2E：窗口 + window.api IPC 全链路（真实数据）
+```
+
+桌面版能力：托盘常驻（✕ 隐藏/菜单显示退出）、单实例、自动更新（electron-updater，需发布到 GitHub Releases）、自选/会话/模型 key 持久化到 userData。
+
+> 打包网络备注（国内）：electron + electron-builder 可能需要代理/GitHub 访问；本项目脚本已做镜像+直连/代理兼容。产物路径 `electron/dist/*.exe`。
+
+---
+
 ## 📦 常用命令
 
 | 命令 | 说明 |
 |---|---|
 | `npm run dev` | 起前后端（开发）|
 | `npm run demo` | 数据层演示：拉 600519/000001/300750 真实行情+财务+新闻+K线 |
-| `npm run test` / `test:e2e` | 单测+集成 / Playwright E2E（独立端口，不影响开发环境）|
+| `npm run test` / `test:e2e` | 单测+集成 / Playwright 浏览器 E2E（独立端口，不影响开发环境）|
+| `npm run dev:electron` | 桌面开发模式（Electron 窗口）|
+| `npm run dist:win` | 打包 Windows 安装包 + 便携版 |
+| `npm run test:electron` | Electron E2E |
 | `npm run eval:agent` | 真实模型评测：PASS/FAIL + 对比上次 + 吸收历史 bad case |
 | `npm run eval:summary` | 评测历史趋势表（只读，不调模型）|
 | `npm run export:badcases` | 低分反馈 → 合并进 bad-cases.jsonl |

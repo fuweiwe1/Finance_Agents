@@ -1,31 +1,18 @@
 import express from 'express';
 import cors from 'cors';
 import type { NextFunction, Request, Response } from 'express';
-import { FileStore } from './store.js';
-import { TraceStore } from './trace/store.js';
-import { CompositeProvider } from './eval/market/composite.js';
-import { ModelManager } from './agent/models.js';
-import { SessionStore } from './agent/sessions.js';
+import { createServices, type ServicesOptions } from './services.js';
 import { marketRoutes } from './api/market.routes.js';
 import { watchlistRoutes } from './api/watchlist.routes.js';
 import { agentRoutes } from './api/agent.routes.js';
 import { tracesRoutes } from './api/traces.routes.js';
 
-export interface AppServices {
-  market?: CompositeProvider;
-  models?: ModelManager;
-  sessions?: SessionStore;
-  store?: FileStore;
-  traces?: TraceStore;
-}
+/** 兼容旧签名：等价 ServicesOptions */
+export type AppServices = ServicesOptions;
 
 export function createApp(services: AppServices = {}): express.Express {
-  // 默认内存 store/traces（测试隔离）；生产在 index.ts 注入文件持久化
-  const store = services.store ?? new FileStore(null);
-  const traces = services.traces ?? new TraceStore(null);
-  const market = services.market ?? new CompositeProvider();
-  const models = services.models ?? new ModelManager({ store });
-  const sessions = services.sessions ?? new SessionStore(store);
+  // 组合根：传输无关业务层（Express 只是薄适配，Electron IPC 复用同一 createServices）
+  const { store, traces, market, models, sessions } = createServices(services);
 
   const app = express();
   app.use(cors());

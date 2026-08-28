@@ -1,0 +1,32 @@
+appId: com.financeagents.app
+productName: Finance Agents
+directories:
+  output: dist
+  buildResources: resources
+files:
+  - out/**
+  - renderer/**
+  - resources/**
+  - package.json
+asar: true
+# 无原生模块：跳过 @electron/rebuild（否则它去 GitHub 下 Electron headers，国内被墙超时）
+npmRebuild: false
+win:
+  target:
+    - nsis
+    - portable
+  icon: resources/icon.ico
+nsis:
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: Finance Agents
+  artifactName: ${productName}-${version}-Setup-${arch}.${ext}
+portable:
+  artifactName: ${productName}-${version}-portable-${arch}.${ext}
+publish:
+  provider: github
+  owner: fuweiwe1
+  repo: Finance_Agents

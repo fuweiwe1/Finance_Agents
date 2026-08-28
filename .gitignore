@@ -1,6 +1,10 @@
 node_modules/
 dist/
+out/
 coverage/
+# electron 打包中间产物
+electron/renderer/
+electron/dist/
 .env
 *.local
 .DS_Store
