@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, Menu, Tray, nativeImage } from 'electron';
+import { app, BrowserWindow, dialog, ipcMain, Menu, Tray, nativeImage } from 'electron';
 import { autoUpdater } from 'electron-updater';
 import { resolve } from 'node:path';
 import { createServices } from '../../../server/src/services.js';
@@ -87,12 +87,31 @@ function showMainWindow(): void {
   mainWindow.focus();
 }
 
-/** 自动更新（M8-4）：仅打包实例生效；发现新版本走 checkForUpdatesAndNotify 提示 */
+/** 自动更新（M8-4）：仅打包实例生效。autoDownload=true 让发现新版后自动后台下载，下载完弹窗提示重启安装 */
 function setupAutoUpdate(): void {
-  autoUpdater.autoDownload = false;
-  autoUpdater.on('update-available', (info) => console.log(`[updater] 发现新版本 ${info.version}`));
+  // 关键：若 autoDownload=false，checkForUpdatesAndNotify 只检查不下载也不提示（用户无感知）
+  autoUpdater.autoDownload = true;
+  autoUpdater.autoInstallOnAppQuit = true;
+
+  autoUpdater.on('update-available', (info) => console.log(`[updater] 发现新版本 ${info.version}，开始后台下载`));
   autoUpdater.on('update-not-available', () => console.log('[updater] 已是最新版本'));
-  autoUpdater.on('update-downloaded', (info) => console.log(`[updater] 新版本已下载 ${info.version}，下次启动生效`));
+  autoUpdater.on('update-downloaded', (info) => {
+    console.log(`[updater] 新版本 ${info.version} 已下载，弹窗提示重启安装`);
+    const opts: Electron.MessageBoxOptions = {
+      type: 'info',
+      title: '发现新版本',
+      message: `新版本 ${info.version} 已下载完成。`,
+      detail: '重启应用即可完成更新。是否现在重启安装？',
+      buttons: ['立即重启', '稍后'],
+      defaultId: 0,
+      cancelId: 1,
+    };
+    const ask = async () => {
+      const { response } = mainWindow ? await dialog.showMessageBox(mainWindow, opts) : await dialog.showMessageBox(opts);
+      if (response === 0) autoUpdater.quitAndInstall();
+    };
+    void ask();
+  });
   autoUpdater.on('error', (err) => console.error('[updater] 检查失败', err?.message ?? err));
   autoUpdater.checkForUpdatesAndNotify().catch((err) => console.error('[updater] check error', err?.message ?? err));
 }
