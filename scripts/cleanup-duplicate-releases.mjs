@@ -47,6 +47,23 @@ async function main() {
   const keeper = same.find((r) => r.assets.some((a) => a.name === 'latest.yml')) ?? same[0];
   for (const r of same) {
     if (r.id === keeper.id) continue;
+    // 把重复 Release 里 keeper 缺的资产（如 blockmap）搬过来，避免丢失增量更新
+    for (const asset of r.assets) {
+      if (keeper.assets.some((a) => a.name === asset.name)) continue;
+      console.log(`[cleanup-releases] 搬运资产 ${asset.name} → Release ${keeper.id}`);
+      const dl = await fetch(asset.browser_download_url, { headers: { Authorization: `Bearer ${token}` } });
+      if (!dl.ok) throw new Error(`download ${asset.name} -> ${dl.status}`);
+      const buf = await dl.arrayBuffer();
+      const up = await fetch(
+        `https://uploads.github.com/repos/${repo}/releases/${keeper.id}/assets?name=${encodeURIComponent(asset.name)}`,
+        {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${token}`, Accept: 'application/vnd.github+json', 'Content-Type': 'application/octet-stream' },
+          body: buf,
+        },
+      );
+      if (!up.ok) throw new Error(`upload ${asset.name} -> ${up.status}`);
+    }
     console.log(`[cleanup-releases] 删除重复 Release ${r.id}（${r.name}，assets=${r.assets.length}）`);
     await api(`/repos/${repo}/releases/${r.id}`, 'DELETE');
   }
