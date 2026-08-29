@@ -30,3 +30,5 @@ publish:
   provider: github
   owner: fuweiwe1
   repo: Finance_Agents
+  # 直接发布为公开 Release（默认 draft 草稿需手动 Publish；同 tag 多草稿会让上传拆散丢失）。设 releaseType: release 后 CI 跑完即可见可更新。
+  releaseType: release
