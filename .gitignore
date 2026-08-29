@@ -20,3 +20,6 @@ playwright-report/
 
 # 服务端持久化数据（含模型 API key，绝不入库）
 .data/
+
+# 个人本地 Claude 设置（权限/偏好，不入库）
+.claude/settings.local.json

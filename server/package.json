@@ -16,7 +16,8 @@
     "export:badcases": "tsx src/scripts/exportBadcases.ts",
     "report:dry": "tsx src/scripts/dailyReport.ts",
     "report:card": "tsx src/scripts/sendTestCard.ts",
-    "report:sync": "tsx src/scripts/syncCloud.ts"
+    "report:sync": "tsx src/scripts/syncCloud.ts",
+    "report:status": "tsx src/scripts/statusCloud.ts"
   },
   "dependencies": {
     "@earendil-works/pi-agent-core": "^0.84.0",
