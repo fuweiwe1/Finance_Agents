@@ -61,4 +61,5 @@ jobs:
           REPORT_MODEL_KEY: ${{ secrets.REPORT_MODEL_KEY }}
           FEISHU_WEBHOOK_URL: ${{ secrets.FEISHU_WEBHOOK_URL }}
           REPORT_DATE: ${{ inputs.date }}
+          REPORT_TRIGGER: ${{ github.event_name }}
         run: npx tsx server/src/scripts/dailyReport.ts

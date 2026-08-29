@@ -89,18 +89,26 @@ async function main(): Promise<void> {
 
   const market = new CompositeProvider();
 
-  // 交易日门：日历优先，兜底用行情核验（节假日无当日 K 线 → 跳过）
-  const td = await isTradingDay(day);
-  let isTrading = td.isTradingDay;
-  let gateSource: string = td.source;
-  if (isTrading && td.source === 'weekday-fallback') {
-    isTrading = await hasTradingBarOnDate(day, market);
-    gateSource = isTrading ? 'market-bar' : 'market-bar:no-bar';
-  }
-  console.log(`[dailyReport] 日期 ${ymd} · 交易日判定: ${isTrading} (${gateSource}) · 清单 ${watchlist.length} 只 · dry=${dry}`);
-  if (!isTrading) {
-    console.log('[dailyReport] 非交易日，跳过。');
-    process.exit(0);
+  // 手动「立即生成报告」：workflow_dispatch 且未指定日期 → 跳过交易日门直接生成（用最近行情）
+  const trigger = env('REPORT_TRIGGER') ?? 'local';
+  const explicitDate = Boolean(args.date || env('REPORT_DATE'));
+  const manualForce = trigger === 'workflow_dispatch' && !explicitDate;
+  if (manualForce) {
+    console.log(`[dailyReport] 手动触发（workflow_dispatch，未指定日期）：跳过交易日门直接生成 · 清单 ${watchlist.length} 只 · dry=${dry}`);
+  } else {
+    // 定时/指定日期：交易日门。日历优先，兜底用行情核验（节假日无当日 K 线 → 跳过）
+    const td = await isTradingDay(day);
+    let isTrading = td.isTradingDay;
+    let gateSource: string = td.source;
+    if (isTrading && td.source === 'weekday-fallback') {
+      isTrading = await hasTradingBarOnDate(day, market);
+      gateSource = isTrading ? 'market-bar' : 'market-bar:no-bar';
+    }
+    console.log(`[dailyReport] 日期 ${ymd} · 交易日判定: ${isTrading} (${gateSource}) · 清单 ${watchlist.length} 只 · dry=${dry}`);
+    if (!isTrading) {
+      console.log('[dailyReport] 非交易日，跳过。');
+      process.exit(0);
+    }
   }
 
   const models = resolveModels();
