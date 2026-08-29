@@ -9,7 +9,7 @@
   <img alt="Node" src="https://img.shields.io/badge/Node.js-%3E%3D20-blue">
   <img alt="Pi SDK" src="https://img.shields.io/badge/Pi%20Agent%20SDK-0.84-8A2BE2">
   <img alt="Electron" src="https://img.shields.io/badge/Electron-44-47848F">
-  <img alt="Tests" src="https://img.shields.io/badge/tests-82%20passing-brightgreen">
+  <img alt="Tests" src="https://img.shields.io/badge/tests-122%20passing-brightgreen">
 </p>
 
 <p align="center">
@@ -20,8 +20,16 @@
 
 ## 🎬 演示
 
-<!-- 重新录制后放到 docs/screenshots/demo.gif，把下面这行取消注释替换即可：
--->
+桌面版实机演示：
+
+![桌面版演示 GIF](docs/screenshots/demo.gif)
+
+UI 截图（重设计版）：
+
+| | |
+|---|---|
+| ![总览](docs/screenshots/redesign-overview.png) | ![图表](docs/screenshots/redesign-chart.png) |
+| ![Traces](docs/screenshots/redesign-traces.png) | ![Traces 明细](docs/screenshots/traces.png) |
 
 ---
 
@@ -107,6 +115,37 @@ npm run dist:win         # electron-builder → dist/ 下 Setup.exe + portable.e
 
 ### 数据源
 **A 股数据零配置、零 key**：腾讯（实时/日K）+ 新浪（兜底）+ 东方财富（新闻）。无海外依赖。
+
+---
+
+## 📮 报告推送（M9）与他人部署
+
+**每日决策仪表盘**：对"报告清单"每交易日 **20:00** 生成每股决策仪表盘，推送到飞书群。云端由 **GitHub Actions** 驱动（关机照发），配置存仓库变量+Secrets，桌面版 **Settings 面板**负责编辑与同步。
+
+### 自己的配置（单用户，一次性）
+1. 桌面版 Settings：填报告清单、报告模型、飞书 webhook、GitHub PAT、仓库（默认 `fuweiwe1/Finance_Agents`）
+2. 点「**应用到云端**」→ 写入仓库变量（清单/模型）
+3. 仓库 Settings → Secrets and variables → Actions，添加两个 Secret：`REPORT_MODEL_KEY`（模型 key）、`FEISHU_WEBHOOK_URL`（飞书群 webhook）
+4. 之后每交易日 20:00 自动推送；也可在面板手动「发送测试卡片 / 立即正式报告」
+5. 交易日历：节假日自动跳过（行情核验）；手动「立即正式报告」跳过交易日门，随时可发
+
+### 他人 / 自建部署（一次性，约 10 分钟）
+> 本功能是**单用户自部署**：云端跑的是你自己仓库里的 `daily-report.yml` 工作流。
+
+1. **fork** 本仓库（自带报告代码 + 工作流 + 发布自动合并）
+2. 安装桌面版（本地聊天/行情直接用，模型 API 自己填）
+3. 桌面版 Settings 里：
+   - **GitHub 仓库**改成你的 fork，如 `你的名字/Finance_Agents`
+   - 填你自己的 **fine-grained PAT**（Actions/Variables/Secrets 均 Read and write）
+   - 填你自己的**飞书群 webhook**、报告模型
+   - **报告清单**改成你要跟踪的股票
+   - 点「**应用到云端**」
+4. 到**你的 fork** 的 GitHub → Settings → Secrets and variables → Actions，添加：
+   - `REPORT_MODEL_KEY`（你的模型 key）
+   - `FEISHU_WEBHOOK_URL`（你的飞书群 webhook，**用你自己的群**）
+5. 确认 fork 的 **Actions 已启用** → 每交易日 20:00 自动推送你的飞书群
+
+> 前提：fork + 启用 Actions（「立即生成报告」也走你 fork 的 workflow_dispatch）。文档见 [docs/DESIGN_DailyReport.md](docs/DESIGN_DailyReport.md)。
 
 ---
 
