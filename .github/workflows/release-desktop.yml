@@ -38,3 +38,12 @@ jobs:
           # 仓库 → Settings → Secrets and variables → Actions → New repository secret → GH_TOKEN(带 repo 权限的 PAT)
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
         run: npx electron-builder --win --publish always
+
+      # electron-builder 多目标发布偶发把资产拆到多个同名 Release → 保留含 latest.yml 的，删其余
+      - name: 合并重复 Release
+        if: success()
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: node scripts/cleanup-duplicate-releases.mjs
