@@ -1,7 +1,7 @@
 <p align="center">
   <strong>Finance Agents</strong> — 基于 Pi Agent SDK 的 A 股智能投顾工作台
   <br/>
-  <em>A-share Stock Agent Workbench · PC 桌面端 + Web 双形态 · 数据源全国内，零 API Key</em>
+  <em>A-share Stock Agent Workbench · PC 桌面端（仅桌面形态）· 数据源全国内，零 API Key</em>
 </p>
 
 <p align="center">
@@ -27,7 +27,7 @@
 
 ## ✨ 功能特性
 
-- **桌面端 + Web 双形态**：PC 桌面应用（Electron，托盘常驻 / 单实例 / 自动更新 / 数据存 userData）与浏览器 Web 版同源同能力；桌面走本地 IPC，Web 走 HTTP
+- **仅桌面形态**：PC 桌面应用（Electron，托盘常驻 / 单实例 / 自动更新 / 数据存 userData）；渲染层即桌面 UI，浏览器访问通道已移除，一切走本地 IPC
 - **实时 A 股行情**：腾讯行情（免 key、国内可达）实时报价，新浪兜底；详情 + 自选行 10s 级自动刷新（抖动 + 指数退避 + 页面隐藏暂停）
 - **股票详情面板**：头部行情（大字价格/涨跌/开高低/前收/量/交易时段徽标）+ Overview / Chart / Financials / News 四 Tab + 2×2 指标卡（QUOTE / PERFORMANCE / VALUATION / BASIC FUNDAMENTALS）+ 通栏 POSITION 卡
 - **K 线图表**：腾讯前复权日 K，TradingView `lightweight-charts` 渲染（免费、无需账号）
@@ -39,7 +39,7 @@
 
 ## 🧩 工作原理
 
-三栏工作台，后端业务抽成传输无关 `services`，桌面(IPC) 与 Web(Express) 共用：
+三栏工作台，后端业务抽成传输无关 `services`（Electron 主进程与测试共用；Express 仅保留作测试面）：
 
 ```
 ┌──────────────┬────────────────────────────┬──────────────────┐
@@ -53,10 +53,9 @@
 │Traces        │POSITION: none              │                  │
 │Agent  *      │                            │                  │
 └──────────────┴────────────────────────────┴──────────────────┘
-         Web 浏览器                       Electron 桌面
-              └──────────┬─────────────────────┘
-                 双传输 api.ts
-        （浏览器 fetch+SSE ｜ 桌面 window.api(IPC)）
+         Electron 桌面（渲染层 = web UI，走 window.api(IPC)）
+              └─────────────────────────────────┘
+                         api.ts 单传输（IPC）
                          ▼
               server/src/services.ts（transport 无关）
        market(腾讯/新浪/东财)  agent(pi-agent-core)  traces
@@ -71,30 +70,29 @@
 ```
 
 - 数据源全部国内免费：腾讯行情（实时/日K）+ 新浪（兜底）+ 东方财富（新闻）
-- 桌面版数据存 `%APPDATA%\Finance Agents`；Web dev 存 `server/.data`
+- 数据存 `%APPDATA%\Finance Agents`（配置/会话/报告推送设置）
 
 ---
 
 ## 🚀 快速开始
 
-**前置**：Node.js ≥ 20（桌面端打包需要 Windows x64）
+**前置**：Node.js ≥ 20（打包需要 Windows x64）。项目为**仅桌面形态**（渲染层即桌面 UI；浏览器访问通道已移除）。
 
-### Web 版（开发/调试最快）
+### 开发
 ```bash
 npm install
-npm run dev          # 起前后端（后端 3001，前端 5173）
-# 打开 http://localhost:5173
+npm run dev:electron   # 桌面开发模式（自动起 vite + Electron 窗口）
 ```
 
-### 桌面版（PC 应用）
+### 打包/发布
 ```bash
-npm install
-npm run dev:electron   # 桌面开发模式（自动起 web dev + Electron 窗口）
-npm run dist:win       # 打包：electron-builder → dist/ 下 Setup.exe + portable.exe
+npm run build:electron   # electron-vite build
+npm run dist:win         # electron-builder → dist/ 下 Setup.exe + portable.exe
 ```
+线上发布走 GitHub Actions：打 tag `vX.Y.Z` 自动构建并发布 Release（含自动更新）。见 [docs/PLAN_ELECTRON.md](docs/PLAN_ELECTRON.md)。
 
 > 国内网络：自带 `.npmrc`（npmmirror + 绕代理），`npm install` 直接可用。
-> 端口占用 `EADDRINUSE`：先 `npm run kill:dev` 再 `npm run dev`。
+> 端口占用 `EADDRINUSE`（vite 5173）：先 `npm run kill:dev` 再重试。
 > 打包若访问 GitHub 超时：为 electron-builder 配置代理或镜像（脚本已兼容）。
 
 ---
@@ -116,22 +114,22 @@ npm run dist:win       # 打包：electron-builder → dist/ 下 Setup.exe + por
 
 | 命令 | 说明 |
 |---|---|
-| `npm run dev` | 起前后端（Web 开发）|
-| `npm run dev:electron` | 桌面开发模式（Electron 窗口）|
+| `npm run dev:electron` | 桌面开发模式（Electron 窗口 + vite）|
 | `npm run dist:win` | 打包 Windows 安装包 + 便携版（`electron/dist/`）|
 | `npm run demo` | 数据层演示：600519/000001/300750 真实行情+财务+新闻+K线 |
-| `npm run test` / `test:e2e` / `test:electron` | 单测+集成 / 浏览器 E2E / 桌面 E2E（独立端口，不影响开发）|
+| `npm run test` / `test:electron` | 单测+集成 / 桌面 E2E（独立端口，不影响开发）|
+| `npm run report:*` | M9 日报：`dry` 干跑 / `card` 发测试卡 / `sync` 应用到云端 / `status` 查云端状态 |
 | `npm run eval:agent` | 真实模型评测：PASS/FAIL + 对比上次 + 吸收历史 bad case |
 | `npm run eval:summary` | 评测历史趋势表（只读，不调模型）|
 | `npm run export:badcases` | 低分反馈 → 合并进 bad-cases.jsonl |
-| `npm run kill:dev` | 清理 3001/5173 残留进程 |
+| `npm run kill:dev` | 清理 vite(5173) 残留进程 |
 
 ---
 
 ## ✅ 质量
 
-- **82 项单测/集成**（腾讯/新浪解析器真实 fixture 锁字段、Agent 工具循环、trace 采集、eval 检查、service/IPC 协议）
-- **浏览器 E2E 4 用例** + **Electron E2E 1 用例**（窗口 + window.api IPC 全链路）+ 打包冒烟
+- **122 项单测/集成**（腾讯/新浪解析器真实 fixture 锁字段、Agent 工具循环、trace 采集、eval 检查、service/IPC/报告路由协议）
+- **Electron E2E**（窗口 + window.api IPC 全链路）+ 打包冒烟
 - **真实模型评测**：`npm run eval:agent` 对 deepseek 批量重放，自动检查工具选择/数字一致/免责/回归
 - typecheck / lint 全绿
 
@@ -145,7 +143,7 @@ npm run dist:win       # 打包：electron-builder → dist/ 下 Setup.exe + por
 | 后端 | Node.js + TypeScript + Express 5 + **Pi Agent SDK**（`pi-agent-core` / `pi-ai`）|
 | 前端 | React 19 + Vite + Tailwind CSS v4 + zustand + lightweight-charts |
 | 数据 | 腾讯行情 / 新浪 / 东方财富（均国内免费）|
-| 测试 | Vitest + supertest + Playwright（浏览器/Electron）|
+| 测试 | Vitest + supertest + Playwright（Electron）|
 
 ---
 

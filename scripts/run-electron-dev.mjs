@@ -1,5 +1,5 @@
 // 桌面开发编排：先确保 web dev server(http://localhost:5173) 就绪，再启动 electron-vite dev
-// 渲染层通过 ELECTRON_RENDERER_URL 指向 web dev server，最大化复用浏览器版。
+// 渲染层通过 ELECTRON_RENDERER_URL 指向 web dev server（仅 Electron 开发用；仅桌面形态，无浏览器产品通道）
 import { spawn } from 'node:child_process';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -33,7 +33,8 @@ let web = null;
 
 async function main() {
   if (!(await isUp(rendererUrl))) {
-    web = spawn('npm', ['run', 'dev'], { cwd: repoRoot, stdio: 'inherit', shell: true });
+    // 仅起 vite web dev（渲染层）；Express 浏览器服务已移除，桌面一切走 IPC
+    web = spawn('npm', ['run', 'dev', '-w', 'web'], { cwd: repoRoot, stdio: 'inherit', shell: true });
   }
   await waitFor(rendererUrl, 60000);
 
