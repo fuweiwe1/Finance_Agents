@@ -165,7 +165,9 @@ GitHub Actions schedule (cron: 0 12 * * * UTC = 20:00 CST，主分支，自持�
 1. **GitHub Secrets API 需 libsodium 加密写值**，本地 npm 代理坏无法装包 → 应用只自动写**仓库变量**（清单/模型 provider·baseUrl·model）；**模型 key 与飞书 webhook** 两个 Secret 由用户在仓库网页添加一次。应用侧 `probeReportCloudState` 检测就绪度并提示。
 2. **PAT 权限**：要能写变量/Secrets/分发，fine-grained PAT 必须给仓库级 **Actions → Read and write**（只读会 403）。
 
-**交易日历**：timor.tech 年度接口本机被墙（云上待验）；bitefu 仅认 `workday=1`（`0`/裸值视为未知）；全部失败 → 周一至周五兜底**照跑**（宁漏勿误跳，避免周五被误跳）。若云上 timor 不可达，可换成东财/其他接口（`tradingDay.ts` 单点）。
+**交易日历**：timor.tech 年度接口本机被墙（CI 也不可达）；bitefu 仅认 `workday=1`（`0`/裸值视为未知）。**兜底改为行情核验**：`hasTradingBarOnDate` 用腾讯日 K（当天收盘后有 bar → 交易日；节假日/周末无 bar → 跳过），数据源即行情层、CI/本机都可达。日程 `cron 0 12 * * *` 本身按周一至五粗过滤，由该核验处理节假日。
+
+**运行状态展示**：runner 不写 GitHub 变量（GITHUB_TOKEN 无仓库变量权限，403）；改为应用侧 `latestWorkflowRun` 读最近一次 workflow run 的状态/结论展示在设置页。
 
 **运行方式**：
 - 本地干跑：`npm run report:dry`（回退聊天模型，打印卡片不推送）

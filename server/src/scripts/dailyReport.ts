@@ -17,11 +17,10 @@ import { FileStore } from '../store.js';
 import { config } from '../config.js';
 import { ModelManager, buildModels, type ModelConfig } from '../agent/models.js';
 import { CompositeProvider } from '../eval/market/composite.js';
-import { isTradingDay } from '../report/tradingDay.js';
+import { isTradingDay, hasTradingBarOnDate } from '../report/tradingDay.js';
 import { runReports } from '../report/runner.js';
 import { buildOverviewCard, buildDashboardCards, type OverviewEntry } from '../report/assembler.js';
 import { FeishuPushChannel } from '../push/feishu.js';
-import { setVariable } from '../report/github.js';
 
 interface CliArgs {
   dry: boolean;
@@ -88,16 +87,23 @@ async function main(): Promise<void> {
   const ymd = args.date ?? env('REPORT_DATE') ?? beijingYmd();
   const day = new Date(`${ymd}T00:00:00+08:00`);
 
-  // 交易日门
+  const market = new CompositeProvider();
+
+  // 交易日门：日历优先，兜底用行情核验（节假日无当日 K 线 → 跳过）
   const td = await isTradingDay(day);
-  console.log(`[dailyReport] 日期 ${ymd} · 交易日判定: ${td.isTradingDay} (${td.source}) · 清单 ${watchlist.length} 只 · dry=${dry}`);
-  if (!td.isTradingDay) {
+  let isTrading = td.isTradingDay;
+  let gateSource: string = td.source;
+  if (isTrading && td.source === 'weekday-fallback') {
+    isTrading = await hasTradingBarOnDate(day, market);
+    gateSource = isTrading ? 'market-bar' : 'market-bar:no-bar';
+  }
+  console.log(`[dailyReport] 日期 ${ymd} · 交易日判定: ${isTrading} (${gateSource}) · 清单 ${watchlist.length} 只 · dry=${dry}`);
+  if (!isTrading) {
     console.log('[dailyReport] 非交易日，跳过。');
     process.exit(0);
   }
 
   const models = resolveModels();
-  const market = new CompositeProvider();
   console.log(`[dailyReport] 模型 ${models.getConfig().model}`);
 
   const results = await runReports(models, market, watchlist, {
@@ -135,20 +141,8 @@ async function main(): Promise<void> {
   const push = await channel.send(cards);
   if (!push.ok) throw new Error(`飞书推送失败: ${push.error}`);
 
-  // 写回最近状态（云端 runner 注入 github.token / github.repository）
-  const ghRepo = env('GH_REPO');
-  const ghToken = env('GH_TOKEN');
-  if (ghRepo && ghToken) {
-    const ts = new Date().toISOString();
-    await setVariable(
-      { token: ghToken, repo: ghRepo },
-      'REPORT_LAST_STATUS',
-      `ok 推${ok.length}失败${failed.length} 于 ${ts}`,
-    ).catch((e) => console.warn(`[dailyReport] 写 REPORT_LAST_STATUS 失败: ${(e as Error).message}`));
-    await setVariable({ token: ghToken, repo: ghRepo }, 'REPORT_LAST_DATE', ymd).catch(() => undefined);
-  }
-
   console.log(`[dailyReport] 已推送 ${cards.length} 张卡片 → 飞书 ✓`);
+  // 运行状态不在此写 GitHub 变量（GITHUB_TOKEN 无该权限）；由应用侧读取最新 workflow run 展示。
 }
 
 main().catch((e) => {

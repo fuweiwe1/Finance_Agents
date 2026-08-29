@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { getVariable, setVariable, listSecrets, dispatchWorkflow, probeActionsWrite, probeReportCloudState, GithubError } from '../github.js';
+import { getVariable, setVariable, listSecrets, dispatchWorkflow, probeActionsWrite, probeReportCloudState, latestWorkflowRun, GithubError } from '../github.js';
 
 const REF = { token: 'pat', repo: 'fuweiwe1/Finance_Agents' };
 
@@ -73,6 +73,24 @@ describe('github transport', () => {
     const fn = (async (_i: unknown, _o?: unknown) => jsonResponse({}, 403)) as typeof fetch;
     const p = await probeActionsWrite(REF, { fetchImpl: fn });
     expect(p.ok).toBe(false);
+  });
+
+  it('latestWorkflowRun 解析最近一次运行', async () => {
+    const fn = (async (_i: unknown, _o?: unknown) =>
+      jsonResponse({
+        workflow_runs: [
+          { id: 42, status: 'completed', conclusion: 'success', display_title: '自选股每日决策仪表盘推送', created_at: '2026-08-29T12:00:00Z', html_url: 'https://github.com/run/42', head_sha: 'abc1234' },
+        ],
+      })) as typeof fetch;
+    const r = await latestWorkflowRun(REF, 'daily-report.yml', { fetchImpl: fn });
+    expect(r?.id).toBe(42);
+    expect(r?.conclusion).toBe('success');
+    expect(r?.displayTitle).toContain('仪表盘');
+  });
+
+  it('latestWorkflowRun 无运行 → null', async () => {
+    const fn = (async (_i: unknown, _o?: unknown) => jsonResponse({ workflow_runs: [] })) as typeof fetch;
+    expect(await latestWorkflowRun(REF, 'daily-report.yml', { fetchImpl: fn })).toBeNull();
   });
 
   it('probeReportCloudState 汇总', async () => {

@@ -226,11 +226,17 @@ export function SettingsPanel({ onClose }: { onClose: () => void }) {
                     云端清单：<span className="text-ink">{cloud.variables.REPORT_WATCHLIST}</span>
                   </p>
                 )}
-                {(cloud.variables.REPORT_LAST_STATUS || cloud.variables.REPORT_LAST_DATE) && (
+                {cloud.lastRun && (
                   <p className="text-ink-soft">
-                    最近推送：{cloud.variables.REPORT_LAST_DATE ?? ''} · {cloud.variables.REPORT_LAST_STATUS ?? '（尚无记录）'}
+                    最近云端运行：{cloud.lastRun.conclusion ?? cloud.lastRun.status} · {new Date(cloud.lastRun.createdAt).toLocaleString('zh-CN')}
+                    {cloud.lastRun.conclusion === 'failure' && (
+                      <a href={cloud.lastRun.htmlUrl} target="_blank" rel="noreferrer" className="ml-1 underline">
+                        查看日志
+                      </a>
+                    )}
                   </p>
                 )}
+                {!cloud.lastRun && cloud.actionsWriteOk && <p className="text-ink-faint">云端暂无运行记录（点击上方「应用到云端」并触发测试后出现）。</p>}
                 {!cloud.secretsReady.modelKey && (
                   <p className="text-up">
                     在仓库 Settings → Secrets and variables → Actions 添加 Secret <b>REPORT_MODEL_KEY</b>（报告模型 API key）

@@ -22,9 +22,8 @@ concurrency:
   group: daily-report
   cancel-in-progress: false
 
-# actions:write 用于把 REPORT_LAST_STATUS 写回仓库变量；contents 只需要读 checkout
+# 运行状态由应用侧读最新 workflow run 展示；runner 无需写仓库变量
 permissions:
-  actions: write
   contents: read
 
 jobs:
@@ -62,6 +61,4 @@ jobs:
           REPORT_MODEL_KEY: ${{ secrets.REPORT_MODEL_KEY }}
           FEISHU_WEBHOOK_URL: ${{ secrets.FEISHU_WEBHOOK_URL }}
           REPORT_DATE: ${{ inputs.date }}
-          GH_TOKEN: ${{ github.token }}
-          GH_REPO: ${{ github.repository }}
         run: npx tsx server/src/scripts/dailyReport.ts

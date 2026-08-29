@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { isTradingDay } from '../tradingDay.js';
+import { isTradingDay, hasTradingBarOnDate } from '../tradingDay.js';
+import type { CompositeProvider } from '../../eval/market/composite.js';
 
 function fakeFetch(route: (url: string) => Response | Promise<Response>): typeof fetch {
   return (async (input: unknown) => {
@@ -81,5 +82,34 @@ describe('isTradingDay', () => {
     const r = await isTradingDay(new Date('2026-03-05T12:00:00+08:00'), { fetchImpl });
     expect(r.isTradingDay).toBe(true);
     expect(r.source).toBe('weekday-fallback');
+  });
+});
+
+describe('hasTradingBarOnDate（行情核验）', () => {
+  const bar = (ymd: string): { ts: number; open: number; high: number; low: number; close: number; volume: number } => ({
+    ts: Math.floor(new Date(`${ymd}T00:00:00Z`).getTime() / 1000),
+    open: 100,
+    high: 101,
+    low: 99,
+    close: 100,
+    volume: 1000,
+  });
+
+  const fakeMarket = (bars: unknown[] | (() => Promise<unknown[]>)) =>
+    ({ getKline: typeof bars === 'function' ? bars : async () => bars }) as unknown as Pick<CompositeProvider, 'getKline'>;
+
+  it('当日有 bar → 交易日', async () => {
+    const m = fakeMarket([bar('2026-08-28')]);
+    expect(await hasTradingBarOnDate(new Date('2026-08-28T20:00:00+08:00'), m)).toBe(true);
+  });
+
+  it('当日无 bar（如节假日）→ 非交易日', async () => {
+    const m = fakeMarket([bar('2026-08-27'), bar('2026-08-28')]);
+    expect(await hasTradingBarOnDate(new Date('2026-08-29T20:00:00+08:00'), m)).toBe(false); // 周六无当日 bar
+  });
+
+  it('行情空/异常 → 按工作日放行（宁漏勿误跳）', async () => {
+    expect(await hasTradingBarOnDate(new Date('2026-03-05T20:00:00+08:00'), fakeMarket([]))).toBe(true);
+    expect(await hasTradingBarOnDate(new Date('2026-03-05T20:00:00+08:00'), fakeMarket(async () => Promise.reject(new Error('down'))))).toBe(true);
   });
 });

@@ -116,6 +116,50 @@ export async function listSecrets(ref: RepoRef, opts: { baseUrl?: string; fetchI
 
 // ---- 工作流分发 ----
 
+export interface WorkflowRunInfo {
+  id: number;
+  status: string;
+  conclusion?: string | null;
+  displayTitle: string;
+  createdAt: string;
+  htmlUrl: string;
+  headSha: string;
+}
+
+interface RawRun {
+  id: number;
+  status: string;
+  conclusion?: string | null;
+  display_title?: string;
+  created_at?: string;
+  html_url?: string;
+  head_sha?: string;
+}
+
+/** 取指定工作流最近一次运行（供设置页展示最近推送状态）。 */
+export async function latestWorkflowRun(
+  ref: RepoRef,
+  workflowFileName: string,
+  opts: { baseUrl?: string; fetchImpl?: typeof fetch } = {},
+): Promise<WorkflowRunInfo | null> {
+  const res = await gh<{ workflow_runs?: RawRun[] }>(
+    { token: ref.token, repo: ref.repo, ...opts },
+    'GET',
+    `/repos/${ref.repo}/actions/workflows/${encodeURIComponent(workflowFileName)}/runs?per_page=1`,
+  );
+  const r = res?.workflow_runs?.[0];
+  if (!r) return null;
+  return {
+    id: r.id,
+    status: r.status,
+    conclusion: r.conclusion ?? null,
+    displayTitle: r.display_title ?? '',
+    createdAt: r.created_at ?? '',
+    htmlUrl: r.html_url ?? '',
+    headSha: r.head_sha ?? '',
+  };
+}
+
 export async function dispatchWorkflow(
   ref: RepoRef,
   workflowFileName: string,

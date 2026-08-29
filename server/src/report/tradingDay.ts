@@ -3,7 +3,11 @@
  * 优先 timor.tech 年度假节日历（区分法定假日与调休上班日——
  * 周末若为「调休上班」(holiday=false) 视为交易日）；失败降级 bitefu 单日接口；再失败按周一至周五。
  * 所有失败路径都 pass 而非 fail（宁可周五跑，不能周一漏发），但返回稳定性提示。
+ *
+ * CI/本机 timor 可能不可达 → 由调用方用 `hasTradingBarOnDate` 做行情核验
+ * （收盘后当天若无日 K bar → 非交易日，节假日/周末正确跳过）。
  */
+import type { CompositeProvider } from '../eval/market/composite.js';
 
 export interface TradingDayResult {
   isTradingDay: boolean;
@@ -82,4 +86,24 @@ export async function isTradingDay(date: Date, opts: HostOptions = {}): Promise<
   }
 
   return { isTradingDay: !isWeekend(date), source: 'weekday-fallback' };
+}
+
+/** 收盘后核验：当天是否存在日 K bar（有 → 交易日；节假日/周末无 bar → 非交易日）。 */
+export async function hasTradingBarOnDate(
+  date: Date,
+  market: Pick<CompositeProvider, 'getKline'>,
+  opts: { symbol?: string } = {},
+): Promise<boolean> {
+  try {
+    const bars = await market.getKline(opts.symbol ?? '600519', 'day', 5);
+    if (!bars.length) return true; // 行情取不到，按工作日放行
+    const last = bars[bars.length - 1]!;
+    const barYmd = new Date(last.ts * 1000).toISOString().slice(0, 10); // 腾讯日K以 UTC 零点存，即交易日标签
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const d = String(date.getDate()).padStart(2, '0');
+    return barYmd === `${y}-${m}-${d}`;
+  } catch {
+    return true; // 网络异常时按工作日放行（宁漏勿误跳）
+  }
 }

@@ -3,10 +3,12 @@ import { FeishuPushChannel } from '../push/feishu.js';
 import type { PushCard } from '../push/channel.js';
 import {
   dispatchWorkflow,
+  latestWorkflowRun,
   probeReportCloudState,
   setVariable,
   type RepoRef,
   type SecretMeta,
+  type WorkflowRunInfo,
 } from './github.js';
 import {
   DEFAULT_GITHUB_REPO,
@@ -36,6 +38,7 @@ export interface CloudStateResult {
   error?: string;
   variables: Record<string, string | undefined>;
   secretsReady: { modelKey: boolean; webhookUrl: boolean };
+  lastRun?: WorkflowRunInfo | null;
   reportSettingsView: ReportSettingsView;
 }
 
@@ -127,11 +130,16 @@ export class ReportService {
     } catch (err) {
       result = { actionsWriteOk: false, error: err instanceof Error ? err.message : String(err), variables: {}, secretsReady: { modelKey: false, webhookUrl: false } };
     }
+    let lastRun: WorkflowRunInfo | null = null;
+    if (result.actionsWriteOk && s.pat) {
+      lastRun = await latestWorkflowRun({ token: s.pat, repo: s.githubRepo }, 'daily-report.yml').catch(() => null);
+    }
     return {
       actionsWriteOk: result.actionsWriteOk,
       error: result.error,
       variables: result.variables,
       secretsReady: result.secretsReady,
+      lastRun,
       reportSettingsView: toReportSettingsView(s),
     };
   }

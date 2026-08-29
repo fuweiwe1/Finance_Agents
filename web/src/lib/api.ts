@@ -257,6 +257,15 @@ export interface ReportCloudState {
   error?: string;
   variables: Record<string, string | undefined>;
   secretsReady: { modelKey: boolean; webhookUrl: boolean };
+  lastRun?: {
+    id: number;
+    status: string;
+    conclusion?: string | null;
+    displayTitle: string;
+    createdAt: string;
+    htmlUrl: string;
+    headSha: string;
+  } | null;
   reportSettingsView: ReportSettingsView;
 }
 
