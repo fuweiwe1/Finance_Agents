@@ -32,6 +32,7 @@ const F = {
   floatMarketCapYi: 44,
   totalMarketCapYi: 45,
   pb: 46,
+  volumeRatio: 49, // 量比
   yearHigh: 67,
   yearLow: 68,
   totalShares: 72,
@@ -92,6 +93,7 @@ export function parseTencentAshareQuote(raw: string, symbol: string): MarketQuot
     pe,
     pb,
     turnoverRate: num(F.turnoverRate),
+    volumeRatio: num(F.volumeRatio),
     eps,
   };
 }

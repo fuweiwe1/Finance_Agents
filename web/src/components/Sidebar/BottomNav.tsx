@@ -9,16 +9,19 @@ export function BottomNav({
   agentPanelVisible,
   onToggleAgent,
   onOpenTraces,
+  onOpenSettings,
 }: {
   agentPanelVisible: boolean;
   onToggleAgent: () => void;
   onOpenTraces: () => void;
+  onOpenSettings: () => void;
 }) {
   return (
     <nav className="shrink-0 space-y-0.5 border-t border-line p-2">
       {NAV_ITEMS.map((item) => (
         <button
           key={item.key}
+          onClick={item.key === 'settings' ? onOpenSettings : undefined}
           className="flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-sm text-ink-soft transition-colors duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-surface-soft"
         >
           <span className="text-base leading-none">{item.icon}</span>

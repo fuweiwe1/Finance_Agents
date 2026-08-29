@@ -99,7 +99,7 @@ function setupAutoUpdate(): void {
 
 /** 注册 IPC handler（M8-2）：渲染层 window.api → invoke(channel) → 这里调用 transport 无关的 services */
 function registerIpc(): void {
-  const { market, store, models, sessions, traces } = services;
+  const { market, store, models, sessions, traces, report } = services;
 
   ipcMain.handle('market:quote', (_e, symbol: string) => market.getQuote(symbol));
   ipcMain.handle('market:quotes', (_e, symbols: string[]) => market.getQuotes(symbols));
@@ -159,6 +159,30 @@ function registerIpc(): void {
     if (!Number.isInteger(rating) || rating < 1 || rating > 5) throw new Error('rating must be integer 1-5');
     return { ok: traces.setFeedback(id, { rating, reason, reasons }) };
   });
+
+  // ---- M9 每日报告推送（复用同一 ReportService） ----
+  ipcMain.handle('report:settings:get', () => report.view());
+  ipcMain.handle('report:settings:save', (_e, body: Record<string, unknown>) => {
+    report.saveSettings({
+      watchlist: Array.isArray(body.watchlist) ? (body.watchlist as string[]) : [],
+      model: {
+        provider: (body.model as { provider?: string } | undefined)?.provider === 'openai' ? 'openai' : 'custom-openai',
+        baseUrl: String((body.model as { baseUrl?: string } | undefined)?.baseUrl ?? '').trim(),
+        model: String((body.model as { model?: string } | undefined)?.model ?? '').trim(),
+        apiKey: String((body.model as { apiKey?: string } | undefined)?.apiKey ?? '').trim(),
+      },
+      feishuWebhookUrl: String(body.feishuWebhookUrl ?? '').trim(),
+      pat: String(body.pat ?? '').trim(),
+      githubRepo: String(body.githubRepo ?? '').trim(),
+    });
+    return report.view();
+  });
+  ipcMain.handle('report:cloud-state', () => report.cloudState());
+  ipcMain.handle('report:sync', () => report.syncToCloud());
+  ipcMain.handle('report:test-card', () => report.sendTestCard());
+  ipcMain.handle('report:test-push', (_e, mode: 'full' | 'test', date?: string) =>
+    report.dispatchTest({ mode: mode === 'full' ? 'full' : 'test', date: String(date ?? '').trim() || undefined }),
+  );
 
   // 聊天流（M8-2）：invoke 启动，事件经 event.sender → webContents.send('agent:event') 推给渲染层
   ipcMain.handle(

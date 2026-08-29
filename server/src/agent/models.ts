@@ -28,7 +28,7 @@ function resolveBaseUrl(cfg: ModelConfig): string {
   return url.replace(/\/+$/, '');
 }
 
-function buildModels(cfg: ModelConfig): Models {
+export function buildModels(cfg: ModelConfig): Models {
   const models = createModels();
   const baseUrl = resolveBaseUrl(cfg);
   const modelDef = {

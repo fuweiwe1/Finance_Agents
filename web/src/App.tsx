@@ -3,6 +3,7 @@ import { Sidebar } from './components/Sidebar/Sidebar';
 import { StockDetailPanel } from './components/StockDetail/StockDetailPanel';
 import { AgentPanel } from './components/AgentPanel/AgentPanel';
 import { TracesModal } from './components/Traces/TracesModal';
+import { SettingsPanel } from './components/Settings/SettingsPanel';
 import { useAppStore } from './state/useAppStore';
 
 const MIN_PANEL_W = 300;
@@ -17,6 +18,7 @@ export default function App() {
   const init = useAppStore((s) => s.init);
   const [agentPanelOpen, setAgentPanelOpen] = useState(true);
   const [tracesOpen, setTracesOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const [agentPanelWidth, setAgentPanelWidth] = useState<number>(() => {
     try {
       const saved = Number(localStorage.getItem('agentPanelWidth'));
@@ -70,6 +72,7 @@ export default function App() {
           agentPanelOpen={agentPanelOpen}
           onToggleAgent={() => setAgentPanelOpen((v) => !v)}
           onOpenTraces={() => setTracesOpen(true)}
+          onOpenSettings={() => setSettingsOpen(true)}
         />
       </aside>
 
@@ -93,6 +96,7 @@ export default function App() {
       )}
 
       {tracesOpen && <TracesModal onClose={() => setTracesOpen(false)} />}
+      {settingsOpen && <SettingsPanel onClose={() => setSettingsOpen(false)} />}
     </div>
   );
 }

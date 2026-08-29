@@ -1,4 +1,4 @@
-import type { AgentTrace, Financials, KlineBar, MarketQuote, ModelConfigInfo, NewsItem, SearchResult, SessionMeta } from './api';
+import type { AgentTrace, Financials, KlineBar, MarketQuote, ModelConfigInfo, NewsItem, ReportCloudState, ReportSettingsView, ReportSyncResult, SearchResult, SessionMeta } from './api';
 
 /** preload 暴露的 window.api（与 electron/src/preload/index.ts 一致） */
 export interface ElectronApi {
@@ -32,6 +32,13 @@ export interface ElectronApi {
     list: (query?: { sessionId?: string; outcome?: string; limit?: number }) => Promise<AgentTrace[]>;
     get: (id: string) => Promise<AgentTrace>;
     feedback: (id: string, rating: number, reason?: string, reasons?: string[]) => Promise<{ ok: boolean }>;
+  };
+  report: {
+    settings: { get: () => Promise<ReportSettingsView>; save: (cfg: Record<string, unknown>) => Promise<ReportSettingsView> };
+    cloudState: () => Promise<ReportCloudState>;
+    sync: () => Promise<ReportSyncResult>;
+    testCard: () => Promise<{ ok: boolean; error?: string }>;
+    testPush: (mode: 'full' | 'test', date?: string) => Promise<{ ok: boolean; guide?: string }>;
   };
 }
 

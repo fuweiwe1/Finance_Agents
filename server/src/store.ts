@@ -2,11 +2,13 @@ import { mkdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs';
 import { dirname } from 'node:path';
 import type { ModelConfig } from './agent/models.js';
 import type { SessionMeta } from './agent/sessions.js';
+import type { ReportSettings } from './report/settings.js';
 
 export interface PersistedState {
   watchlist?: string[];
   sessions?: SessionMeta[];
   modelConfig?: ModelConfig;
+  reportSettings?: ReportSettings;
 }
 
 /**
@@ -41,6 +43,14 @@ export class FileStore {
   }
   setModelConfig(cfg: ModelConfig): void {
     this.data.modelConfig = cfg;
+    this.persist();
+  }
+
+  getReportSettings(): ReportSettings | undefined {
+    return this.data.reportSettings;
+  }
+  setReportSettings(s: ReportSettings): void {
+    this.data.reportSettings = s;
     this.persist();
   }
 

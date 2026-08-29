@@ -13,7 +13,10 @@
     "demo": "tsx src/scripts/demo.ts",
     "eval:agent": "tsx src/scripts/evalAgent.ts",
     "eval:summary": "tsx src/scripts/evalSummary.ts",
-    "export:badcases": "tsx src/scripts/exportBadcases.ts"
+    "export:badcases": "tsx src/scripts/exportBadcases.ts",
+    "report:dry": "tsx src/scripts/dailyReport.ts",
+    "report:card": "tsx src/scripts/sendTestCard.ts",
+    "report:sync": "tsx src/scripts/syncCloud.ts"
   },
   "dependencies": {
     "@earendil-works/pi-agent-core": "^0.84.0",

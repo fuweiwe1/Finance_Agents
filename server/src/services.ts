@@ -3,6 +3,7 @@ import { TraceStore } from './trace/store.js';
 import { CompositeProvider } from './eval/market/composite.js';
 import { ModelManager } from './agent/models.js';
 import { SessionStore } from './agent/sessions.js';
+import { ReportService } from './report/service.js';
 
 /**
  * 传输无关的业务服务组合根：Express 路由 与 Electron 主进程 IPC 都可复用。
@@ -14,6 +15,7 @@ export interface Services {
   market: CompositeProvider;
   models: ModelManager;
   sessions: SessionStore;
+  report: ReportService;
 }
 
 /** 部分注入：缺省项用内存隔离的默认实现（测试友好）；dataFile/traceFile 用于生产持久化 */
@@ -23,6 +25,7 @@ export interface ServicesOptions {
   market?: CompositeProvider;
   models?: ModelManager;
   sessions?: SessionStore;
+  report?: ReportService;
   dataFile?: string | null;
   traceFile?: string | null;
 }
@@ -33,5 +36,6 @@ export function createServices(opts: ServicesOptions = {}): Services {
   const market = opts.market ?? new CompositeProvider();
   const models = opts.models ?? new ModelManager({ store });
   const sessions = opts.sessions ?? new SessionStore(store);
-  return { store, traces, market, models, sessions };
+  const report = opts.report ?? new ReportService(store);
+  return { store, traces, market, models, sessions, report };
 }

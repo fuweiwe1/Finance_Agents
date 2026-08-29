@@ -44,4 +44,14 @@ contextBridge.exposeInMainWorld('api', {
     feedback: (id: string, rating: number, reason?: string, reasons?: string[]) =>
       invoke('traces:feedback', id, rating, reason, reasons),
   },
+  report: {
+    settings: {
+      get: () => invoke('report:settings:get'),
+      save: (cfg: Record<string, unknown>) => invoke('report:settings:save', cfg),
+    },
+    cloudState: () => invoke('report:cloud-state'),
+    sync: () => invoke('report:sync'),
+    testCard: () => invoke('report:test-card'),
+    testPush: (mode: 'full' | 'test', date?: string) => invoke('report:test-push', mode, date),
+  },
 });

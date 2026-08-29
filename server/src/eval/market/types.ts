@@ -28,6 +28,7 @@ export interface MarketQuote {
   pb?: number;
   turnoverRate?: number;
   eps?: number;
+  volumeRatio?: number; // 量比（腾讯字段 49）
 }
 
 export interface Financials {

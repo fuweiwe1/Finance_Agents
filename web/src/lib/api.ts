@@ -84,6 +84,21 @@ export const api = {
             body: JSON.stringify({ rating, reason, reasons }),
           }),
   },
+
+  report: {
+    settings: () => (ipc ? ipc.report.settings.get() : request<ReportSettingsView>('/report/settings')),
+    saveSettings: (cfg: SaveReportSettingsInput) =>
+      ipc
+        ? ipc.report.settings.save(cfg as unknown as Record<string, unknown>)
+        : request<ReportSettingsView>('/report/settings', { method: 'PUT', body: JSON.stringify(cfg) }),
+    cloudState: () => (ipc ? ipc.report.cloudState() : request<ReportCloudState>('/report/cloud-state')),
+    sync: () => (ipc ? ipc.report.sync() : request<ReportSyncResult>('/report/sync', { method: 'POST' })),
+    testCard: () => (ipc ? ipc.report.testCard() : request<{ ok: boolean; error?: string }>('/report/test-card', { method: 'POST' })),
+    testPush: (mode: 'full' | 'test', date?: string) =>
+      ipc
+        ? ipc.report.testPush(mode, date)
+        : request<{ ok: boolean; guide?: string }>('/report/test-push', { method: 'POST', body: JSON.stringify({ mode, date }) }),
+  },
 };
 
 function qs(params?: Record<string, string | number | undefined>): string {
@@ -217,4 +232,39 @@ export interface AgentTrace {
   outcome: 'ok' | 'error';
   errorMessage?: string;
   feedback?: { rating: number; reason?: string; reasons?: string[] };
+}
+
+// ---- 每日报告推送（与后端 report/* 契约一致） ----
+export interface ReportSettingsView {
+  watchlist: string[];
+  model: { provider: string; baseUrl: string; model: string; hasKey: boolean };
+  hasWebhookUrl: boolean;
+  hasPat: boolean;
+  githubRepo: string;
+  lastSyncedAt?: string;
+}
+
+export interface SaveReportSettingsInput {
+  watchlist: string[];
+  model: { provider: string; baseUrl: string; model: string; apiKey: string };
+  feishuWebhookUrl: string;
+  pat: string;
+  githubRepo: string;
+}
+
+export interface ReportCloudState {
+  actionsWriteOk: boolean;
+  error?: string;
+  variables: Record<string, string | undefined>;
+  secretsReady: { modelKey: boolean; webhookUrl: boolean };
+  reportSettingsView: ReportSettingsView;
+}
+
+export interface ReportSyncResult {
+  ok: boolean;
+  variables: { name: string; value: string }[];
+  missingSecrets: string[];
+  actionsWriteOk: boolean;
+  error?: string;
+  guide?: string;
 }

@@ -6,16 +6,23 @@ export function Sidebar({
   agentPanelOpen,
   onToggleAgent,
   onOpenTraces,
+  onOpenSettings,
 }: {
   agentPanelOpen: boolean;
   onToggleAgent: () => void;
   onOpenTraces: () => void;
+  onOpenSettings: () => void;
 }) {
   return (
     <>
       <SessionsSection />
       <WatchlistSection />
-      <BottomNav agentPanelVisible={agentPanelOpen} onToggleAgent={onToggleAgent} onOpenTraces={onOpenTraces} />
+      <BottomNav
+        agentPanelVisible={agentPanelOpen}
+        onToggleAgent={onToggleAgent}
+        onOpenTraces={onOpenTraces}
+        onOpenSettings={onOpenSettings}
+      />
     </>
   );
 }

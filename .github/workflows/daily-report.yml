@@ -1,0 +1,67 @@
+name: 自选股每日决策仪表盘推送
+
+on:
+  # 20:00 北京 = 12:00 UTC（GitHub Actions cron 仅 UTC）
+  schedule:
+    - cron: '0 12 * * *'
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: full=正式报告 / test=只发测试卡片
+        type: choice
+        default: full
+        options:
+          - full
+          - test
+      date:
+        description: 指定日期 YYYY-MM-DD（默认北京时间今天；可测节假日跳过）
+        type: string
+        default: ''
+
+concurrency:
+  group: daily-report
+  cancel-in-progress: false
+
+# actions:write 用于把 REPORT_LAST_STATUS 写回仓库变量；contents 只需要读 checkout
+permissions:
+  actions: write
+  contents: read
+
+jobs:
+  daily-report:
+    runs-on: ubuntu-latest
+    env:
+      TZ: Asia/Shanghai
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      # 本地 .npmrc 默认 npmmirror + 绕代理；CI 用官方 registry 更快更稳
+      - name: 安装依赖
+        run: npm ci
+        env:
+          npm_config_registry: https://registry.npmjs.org/
+
+      - name: 发送测试卡片（mode=test）
+        if: inputs.mode == 'test'
+        env:
+          FEISHU_WEBHOOK_URL: ${{ secrets.FEISHU_WEBHOOK_URL }}
+        run: npx tsx server/src/scripts/sendTestCard.ts
+
+      - name: 生成并推送每日报告（含交易日门）
+        if: inputs.mode != 'test'
+        env:
+          REPORT_WATCHLIST: ${{ vars.REPORT_WATCHLIST }}
+          REPORT_MODEL_PROVIDER: ${{ vars.REPORT_MODEL_PROVIDER }}
+          REPORT_MODEL_BASE_URL: ${{ vars.REPORT_MODEL_BASE_URL }}
+          REPORT_MODEL_NAME: ${{ vars.REPORT_MODEL_NAME }}
+          REPORT_MODEL_KEY: ${{ secrets.REPORT_MODEL_KEY }}
+          FEISHU_WEBHOOK_URL: ${{ secrets.FEISHU_WEBHOOK_URL }}
+          REPORT_DATE: ${{ inputs.date }}
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: npx tsx server/src/scripts/dailyReport.ts
